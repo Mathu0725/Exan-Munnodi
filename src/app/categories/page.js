@@ -2,8 +2,9 @@
 
 import MasterDataPage from '@/components/shared/MasterDataPage';
 import { categoryService } from '@/services/masterDataService';
+import withRole from '@/components/auth/withRole';
 
-export default function CategoriesPage() {
+function CategoriesPage() {
   return (
     <MasterDataPage
       pageTitle="Categories"
@@ -12,3 +13,5 @@ export default function CategoriesPage() {
     />
   );
 }
+
+export default withRole(CategoriesPage, ['Admin', 'Content Editor', 'Viewer']);

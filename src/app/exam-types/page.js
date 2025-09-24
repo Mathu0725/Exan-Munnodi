@@ -2,8 +2,9 @@
 
 import MasterDataPage from '@/components/shared/MasterDataPage';
 import { examTypeService } from '@/services/masterDataService';
+import withRole from '@/components/auth/withRole';
 
-export default function ExamTypesPage() {
+function ExamTypesPage() {
   return (
     <MasterDataPage
       pageTitle="Exam Types"
@@ -12,3 +13,5 @@ export default function ExamTypesPage() {
     />
   );
 }
+
+export default withRole(ExamTypesPage, ['Admin', 'Content Editor', 'Viewer']);

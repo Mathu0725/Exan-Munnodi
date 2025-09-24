@@ -2,8 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import PageWrapper from '@/components/layout/PageWrapper';
 import { examService } from '@/services/examService';
+import withRole from '@/components/auth/withRole';
+import { notificationService } from '@/services/notificationService';
 
 const StatusBadge = ({ status }) => {
   const baseClasses = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize';
@@ -21,7 +24,8 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString();
 };
 
-export default function ExamsPage() {
+function ExamsPage() {
+  const { user } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ['exams'],
     queryFn: examService.getExams,
@@ -30,9 +34,11 @@ export default function ExamsPage() {
   return (
     <PageWrapper title="Exams">
       <div className="flex justify-end mb-4">
-        <Link href="/exams/new" className="px-4 py-2 bg-indigo-600 text-white rounded-md">
-          Create Exam
-        </Link>
+        {user?.role !== 'Viewer' && (
+          <Link href="/exams/new" className="px-4 py-2 bg-indigo-600 text-white rounded-md">
+            Create Exam
+          </Link>
+        )}
       </div>
 
       {isLoading && <p>Loading exams...</p>}
@@ -60,8 +66,32 @@ export default function ExamsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">{formatDate(exam.start_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{formatDate(exam.end_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
+                    <select
+                      defaultValue={exam.status}
+                      onChange={async (e) => {
+                        const status = e.target.value;
+                        await examService.updateExam(exam.id, { status });
+                        location.reload();
+                      }}
+                      className="mr-3 px-2 py-1 border rounded"
+                    >
+                      <option value="draft">draft</option>
+                      <option value="scheduled">scheduled</option>
+                      <option value="live">live</option>
+                      <option value="archived">archived</option>
+                    </select>
+                    <Link href={`/exams/${exam.id}/preview`} className="text-gray-700 hover:text-gray-900 mr-4">Preview</Link>
+                    <Link href={`/exams/${exam.id}/results`} className="text-gray-700 hover:text-gray-900 mr-4">Results</Link>
+                    <Link href={`/exams/new?clone=${exam.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</Link>
+                    <button onClick={async () => {
+                      const to = prompt('Enter recipient emails (comma separated):', 'student@example.com');
+                      if (to === null) return;
+                      const pwd = prompt('Enter exam access password to include (leave blank to skip):') || '';
+                      const msg = `Exam: ${exam.title}\nPassword: ${pwd || '(none)'}\nStart: ${formatDate(exam.start_at)} End: ${formatDate(exam.end_at)}\nPortal: https://your-portal.example`;
+                      const res = await notificationService.sendExamNotification({ examId: exam.id, subject: `Exam Access - ${exam.title}`, message: msg, recipients: to.split(',').map(s => s.trim()).filter(Boolean) });
+                      alert(res?.success ? 'Email sent.' : 'Notification queued.');
+                    }} className="text-green-700 hover:text-green-900 mr-4">Notify</button>
+                    <button onClick={() => alert('Delete not implemented in demo')} className="text-red-600 hover:text-red-900">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -72,3 +102,5 @@ export default function ExamsPage() {
     </PageWrapper>
   );
 }
+
+export default withRole(ExamsPage, ['Admin', 'Content Editor', 'Viewer']);

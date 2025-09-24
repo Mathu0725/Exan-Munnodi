@@ -9,19 +9,55 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
+// Mock user service to get user details including role
+const mockUserService = {
+  getUserByEmail: async (email) => {
+    // In a real app, this would be a fetch call to your backend
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const nameFromEmail = (em) => {
+      const local = em.split('@')[0] || '';
+      // Convert kebab/underscore/dots to spaces and title-case
+      const words = local.replace(/[._-]+/g, ' ').trim().split(/\s+/);
+      return words
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ') || em;
+    };
+
+    if (email.startsWith('admin')) {
+      return { email, role: 'Admin', name: 'Admin User' };
+    }
+    if (email.startsWith('editor')) {
+      return { email, role: 'Content Editor', name: 'Editor User' };
+    }
+    if (email.startsWith('student')) {
+      return { email, role: 'Student', name: 'Student User' };
+    }
+    return { email, role: 'Viewer', name: nameFromEmail(email) };
+  },
+};
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  const checkAuth = useCallback(() => {
+  const checkAuth = useCallback(async () => {
+    setLoading(true);
     const token = localStorage.getItem('authToken');
     if (token) {
-      setUser({ email: token }); // In real app, decode token or fetch user
-      if (pathname === '/login') {
-        router.replace('/');
+      try {
+        const userDetails = await mockUserService.getUserByEmail(token);
+        setUser(userDetails);
+        if (pathname === '/login') {
+          router.replace('/');
+        }
+      } catch (e) {
+        setUser(null);
+        localStorage.removeItem('authToken');
       }
     } else {
       setUser(null);
@@ -29,36 +65,32 @@ export function AuthProvider({ children }) {
         router.replace('/login');
       }
     }
+    setLoading(false);
   }, [router, pathname]);
 
   useEffect(() => {
     checkAuth();
-    // Listen for storage changes to sync across tabs
     window.addEventListener('storage', checkAuth);
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-    };
+    return () => window.removeEventListener('storage', checkAuth);
   }, [checkAuth]);
 
-  const login = (email) => {
-    // Mock token, in real app this comes from API
-    localStorage.setItem('authToken', email);
-    setUser({ email });
+  const login = async (email) => {
+    const userDetails = await mockUserService.getUserByEmail(email);
+    localStorage.setItem('authToken', userDetails.email);
+    setUser(userDetails);
+    router.push('/');
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     setUser(null);
+    router.push('/login');
   };
 
-  const value = { user, login, logout };
+  const value = { user, login, logout, loading };
 
-  if (!user && pathname !== '/login') {
-    return null; // or a loading spinner
-  }
-
-  if (user && pathname === '/login') {
-    return null; // or a loading spinner
+  if (loading) {
+    return <div className="w-screen h-screen flex items-center justify-center">Loading...</div>; // Or a proper splash screen
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

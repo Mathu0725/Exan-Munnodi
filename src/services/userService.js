@@ -4,6 +4,7 @@ const initialUsers = [
   { id: 1, name: 'Super Admin', email: 'super@example.com', role: 'Super Admin' },
   { id: 2, name: 'Admin User', email: 'admin@example.com', role: 'Admin' },
   { id: 3, name: 'Content Editor', email: 'editor@example.com', role: 'Content Editor' },
+  { id: 4, name: 'Student User', email: 'student@example.com', role: 'Student' },
 ];
 
 const getUsersFromStorage = () => {
@@ -47,4 +48,4 @@ export const userService = {
   },
 };
 
-export const ROLES = ['Super Admin', 'Admin', 'Content Editor', 'Reviewer', 'Analyst'];
+export const ROLES = ['Super Admin', 'Admin', 'Content Editor', 'Reviewer', 'Analyst', 'Student'];

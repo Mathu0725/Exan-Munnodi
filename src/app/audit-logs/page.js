@@ -3,13 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import PageWrapper from '@/components/layout/PageWrapper';
 import { auditLogService } from '@/services/auditLogService';
+import withRole from '@/components/auth/withRole';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   return new Date(dateString).toLocaleString();
 };
 
-export default function AuditLogsPage() {
+function AuditLogsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['auditLogs'],
     queryFn: auditLogService.getLogs,
@@ -49,3 +50,5 @@ export default function AuditLogsPage() {
     </PageWrapper>
   );
 }
+
+export default withRole(AuditLogsPage, ['Admin']);

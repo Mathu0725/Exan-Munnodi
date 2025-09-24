@@ -1,7 +1,9 @@
+"use client";
 import PageWrapper from '@/components/layout/PageWrapper';
 import ImportUploader from '@/components/bulk/ImportUploader';
+import withRole from '@/components/auth/withRole';
 
-export default function BulkActionsPage() {
+function BulkActionsPage() {
   return (
     <PageWrapper title="Bulk Actions">
       <div className="space-y-8">
@@ -11,3 +13,5 @@ export default function BulkActionsPage() {
     </PageWrapper>
   );
 }
+
+export default withRole(BulkActionsPage, ['Admin', 'Content Editor']);

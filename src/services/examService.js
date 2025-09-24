@@ -1,4 +1,5 @@
 // Mock service for Exams
+import { auditLogService } from './auditLogService';
 
 const initialExams = [
   {
@@ -54,6 +55,16 @@ export const examService = {
     return { data: exams };
   },
 
+  async getExam(id) {
+    await delay(200);
+    const exams = getExamsFromStorage();
+    const exam = exams.find((e) => e.id === parseInt(id));
+    if (!exam) {
+      throw new Error('Exam not found');
+    }
+    return exam;
+  },
+
   async createExam(data) {
     await delay(500);
     const exams = getExamsFromStorage();
@@ -64,6 +75,18 @@ export const examService = {
     };
     const updatedExams = [...exams, newExam];
     saveExamsToStorage(updatedExams);
+    try { auditLogService.logAction('CREATE', 'Exam', newExam.id, `Created exam: ${newExam.title}`); } catch {}
     return newExam;
+  },
+
+  async updateExam(id, data) {
+    await delay(300);
+    let exams = getExamsFromStorage();
+    const existing = exams.find((e) => e.id === id);
+    if (!existing) throw new Error('Exam not found');
+    exams = exams.map((e) => (e.id === id ? { ...e, ...data } : e));
+    saveExamsToStorage(exams);
+    try { auditLogService.logAction('UPDATE', 'Exam', id, `Updated exam: ${existing.title}`); } catch {}
+    return exams.find((e) => e.id === id);
   },
 };

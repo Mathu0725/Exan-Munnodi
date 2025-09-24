@@ -1,70 +1,69 @@
-# Getting Started with Create React App
+# UnicomTIC Quiz - Admin
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Next.js 14 (App Router) admin console for managing subjects, questions, and exams. Includes a student runner and admin-only results. Now partially wired to a Prisma (SQLite) API.
 
-## Available Scripts
+## Quick Start
 
-In the project directory, you can run:
+1) Install dependencies
 
-### `npm start`
+```bash
+npm install
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+2) Configure database (SQLite via Prisma)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Create a `.env` file in the project root with:
 
-### `npm test`
+```
+DATABASE_URL="file:./dev.db"
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Generate client and run initial migration:
 
-### `npm run build`
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3) Run the dev server
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm run dev
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Open http://localhost:3000
 
-### `npm run eject`
+## Logins (mock)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Admin: `admin@example.com` / `password`
+- Editor: `editor@example.com` / `password`
+- Student: `student@example.com` / `password`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Any email starting with `admin`, `editor`, or `student` maps to that role.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## API status
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- `/api/questions` (GET/POST) backed by Prisma/SQLite
+- Frontend `questionService` calls API and falls back to localStorage mocks if the API/database isn't set up.
 
-## Learn More
+## Scripts
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `npm run dev` — start Next.js dev server
+- `npm run build` — build
+- `npm start` — run production build
+- `npm run prisma:generate` — generate Prisma client
+- `npm run prisma:migrate` — run dev migration
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Email notifications
 
-### Code Splitting
+Configure SMTP in `.env` to enable real email notifications:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```
+SMTP_HOST=smtp.yourhost.com
+SMTP_PORT=587
+SMTP_USER=your_user
+SMTP_PASS=your_pass
+FROM_EMAIL="UnicomTIC Quiz <no-reply@yourhost.com>"
+```
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The Exams page “Notify” action will call `/api/notify` to send emails. If SMTP is not configured, it falls back to a local mock log.

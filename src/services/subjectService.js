@@ -114,6 +114,16 @@ export const subjectService = {
     return newSubSubject;
   },
 
+  async getSubSubjectsForSubject(subjectId) {
+    await delay(300);
+    if (!subjectId) return { data: [] };
+    const subsubjects = getSubSubjectsFromStorage();
+    const filtered = subsubjects
+      .filter((ss) => ss.subject_id === parseInt(subjectId))
+      .sort((a, b) => a.order - b.order);
+    return { data: filtered };
+  },
+
   async updateSubSubject(id, data) {
     await delay(500);
     let subsubjects = getSubSubjectsFromStorage();

@@ -4,7 +4,7 @@ import { examTypeService } from '@/services/masterDataService';
 
 export default function Step1Details({ data, onNext }) {
   const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: data });
-  const { data: examTypesData } = useQuery({ queryKey: ['examTypes'], queryFn: examTypeService.getAll });
+  const { data: examTypesData } = useQuery({ queryKey: ['examTypes'], queryFn: () => examTypeService.getAll() });
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-6 mt-8">

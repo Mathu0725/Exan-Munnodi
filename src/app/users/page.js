@@ -6,8 +6,9 @@ import PageWrapper from '@/components/layout/PageWrapper';
 import { userService } from '@/services/userService';
 import Modal from '@/components/ui/Modal';
 import UserForm from '@/components/users/UserForm';
+import withRole from '@/components/auth/withRole';
 
-export default function UsersPage() {
+function UsersPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -97,3 +98,5 @@ export default function UsersPage() {
     </PageWrapper>
   );
 }
+
+export default withRole(UsersPage, ['Admin']);

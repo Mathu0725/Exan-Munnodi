@@ -5,7 +5,8 @@ import ExamPreview from '@/components/exams/ExamPreview';
 
 export default function Step3Configure({ data, onBack, onSubmit }) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const { register, handleSubmit, watch, getValues } = useForm({
+  const [isJsonOpen, setIsJsonOpen] = useState(false);
+  const { register, handleSubmit, watch, getValues, reset } = useForm({
     defaultValues: data.config || {
       global_shuffle: false,
       negative_marking: true,
@@ -13,8 +14,17 @@ export default function Step3Configure({ data, onBack, onSubmit }) {
       question_numbering: 'fixed',
       total_time_minutes: '',
       timing_mode: 'total_exam_time',
+      access_password: '',
     },
   });
+  const [jsonText, setJsonText] = useState(JSON.stringify(data.config || {
+    global_shuffle: false,
+    negative_marking: true,
+    allow_review: true,
+    question_numbering: 'fixed',
+    total_time_minutes: '',
+    timing_mode: 'total_exam_time',
+  }, null, 2));
 
   const timingMode = watch('timing_mode');
 
@@ -30,6 +40,21 @@ export default function Step3Configure({ data, onBack, onSubmit }) {
     ...data,
     config: getValues(),
   });
+
+  const openJsonEditor = () => {
+    setJsonText(JSON.stringify(getValues(), null, 2));
+    setIsJsonOpen(true);
+  };
+
+  const applyJsonChanges = () => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      reset(parsed);
+      setIsJsonOpen(false);
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  };
 
   return (
     <>
@@ -79,6 +104,14 @@ export default function Step3Configure({ data, onBack, onSubmit }) {
                 <input id="total_time_minutes" type="number" placeholder="Optional" {...register('total_time_minutes')} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
               </div>
             )}
+            <div>
+              <label htmlFor="access_password" className="block text-sm font-medium text-gray-700">Exam Access Password</label>
+              <div className="mt-1 flex">
+                <input id="access_password" type="text" {...register('access_password')} className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md" />
+                <button type="button" onClick={() => reset({ ...getValues(), access_password: Math.random().toString(36).slice(2, 8).toUpperCase() })} className="px-3 bg-gray-200 rounded-r-md">Generate</button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Students must enter this to start the exam.</p>
+            </div>
           </div>
 
           <div>
@@ -92,6 +125,7 @@ export default function Step3Configure({ data, onBack, onSubmit }) {
           <button type="button" onClick={onBack} className="px-6 py-2 bg-gray-200 rounded-md">Back</button>
           <div className="flex space-x-3">
             <button type="button" onClick={() => setIsPreviewOpen(true)} className="px-6 py-2 bg-blue-600 text-white rounded-md">Preview</button>
+            <button type="button" onClick={openJsonEditor} className="px-6 py-2 bg-gray-700 text-white rounded-md">Edit JSON</button>
             <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-md">Save Exam</button>
           </div>
         </div>
@@ -99,6 +133,21 @@ export default function Step3Configure({ data, onBack, onSubmit }) {
 
       <Modal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} title="Exam Preview" size="4xl">
         <ExamPreview examData={getPreviewData()} />
+      </Modal>
+
+      <Modal isOpen={isJsonOpen} onClose={() => setIsJsonOpen(false)} title="Edit Exam Config (JSON)" size="3xl">
+        <div className="space-y-4">
+          <textarea
+            value={jsonText}
+            onChange={(e) => setJsonText(e.target.value)}
+            rows={16}
+            className="w-full font-mono text-sm border rounded p-3"
+          />
+          <div className="flex justify-end space-x-3">
+            <button onClick={() => setIsJsonOpen(false)} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+            <button onClick={applyJsonChanges} className="px-4 py-2 bg-indigo-600 text-white rounded-md">Apply</button>
+          </div>
+        </div>
       </Modal>
     </>
   );

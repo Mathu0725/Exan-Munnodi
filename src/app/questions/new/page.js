@@ -1,8 +1,9 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import PageWrapper from '@/components/layout/PageWrapper';
 import { questionService } from '@/services/questionService';
 import { subjectService } from '@/services/subjectService';
@@ -10,8 +11,7 @@ import { categoryService } from '@/services/masterDataService';
 import OptionsEditor from '@/components/questions/OptionsEditor';
 import DifficultySelector from '@/components/questions/DifficultySelector';
 import ImageUploader from '@/components/questions/ImageUploader';
-
-const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
+import LatexQuillEditor from '@/components/questions/LatexQuillEditor';
 
 export default function NewQuestionPage() {
   const router = useRouter();
@@ -84,7 +84,7 @@ export default function NewQuestionPage() {
           <Controller
             name="body"
             control={control}
-            render={({ field }) => <QuillEditor theme="snow" {...field} className="mt-1 bg-white" />}
+            render={({ field }) => <LatexQuillEditor {...field} className="mt-1 bg-white" />}
           />
         </div>
 

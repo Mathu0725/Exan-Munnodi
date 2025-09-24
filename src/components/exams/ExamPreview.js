@@ -1,14 +1,25 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
-
-const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
+import LatexQuillEditor from '@/components/questions/LatexQuillEditor';
+import 'react-quill/dist/quill.bubble.css'; // Use bubble theme for read-only
+import { useAuth } from '@/hooks/useAuth';
+import { useMemo, useState } from 'react';
 
 export default function ExamPreview({ examData }) {
   if (!examData) return null;
 
   const { title, description, questions, config } = examData;
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
+  const pageSize = 20;
+  const totalQuestions = Array.isArray(questions) ? questions.length : 0;
+  const totalPages = Math.max(1, Math.ceil(totalQuestions / pageSize));
+  const [page, setPage] = useState(1);
+  const pageQuestions = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return (questions || []).slice(start, start + pageSize);
+  }, [questions, page]);
 
   return (
     <div className="bg-gray-50 p-6">
@@ -16,29 +27,50 @@ export default function ExamPreview({ examData }) {
         <header className="border-b pb-4 mb-6">
           <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
           {description && <p className="mt-2 text-gray-600">{description}</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <span>Total Questions: {totalQuestions}</span>
+            {config?.total_time_minutes ? (
+              <span>Total Time: {config.total_time_minutes} min</span>
+            ) : null}
+            <span>Showing {pageSize} per page</span>
+          </div>
         </header>
 
+        {isAdmin && (
+          <div className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded p-3">
+            Admin view: Correct answers are highlighted.
+          </div>
+        )}
+
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+
         <div className="space-y-8">
-          {questions.map((q, index) => (
+          {pageQuestions.map((q, index) => (
             <div key={q.id || index} className="border-b pb-6">
               <div className="flex items-start">
-                <div className="font-bold text-lg text-gray-700 mr-4">{index + 1}.</div>
+                <div className="font-bold text-lg text-gray-700 mr-4">{(page - 1) * pageSize + index + 1}.</div>
                 <div className="flex-1">
-                  <div className="prose">
-                    <QuillEditor
+                  <div className="prose ql-editor">
+                    <LatexQuillEditor
                       value={q.body}
                       readOnly={true}
                       theme="bubble"
-                      modules={{ toolbar: false }}
                     />
                   </div>
                   <div className="mt-4 space-y-2">
-                    {q.options.map((opt, optIndex) => (
-                      <div key={opt.id || optIndex} className="flex items-center p-2 border rounded-md">
-                        <input type="radio" name={`question-${index}`} id={`q-${index}-opt-${optIndex}`} className="mr-3" />
-                        <label htmlFor={`q-${index}-opt-${optIndex}`} className="flex-1">{opt.text}</label>
-                      </div>
-                    ))}
+                    {q.options.map((opt, optIndex) => {
+                      const isCorrect = !!opt.is_correct;
+                      const highlightClasses = isAdmin && isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200';
+                      return (
+                        <div key={opt.id || optIndex} className={`flex items-center p-2 border rounded-md ${highlightClasses}`}>
+                          <input type="radio" name={`question-${index}`} id={`q-${index}-opt-${optIndex}`} className="mr-3" disabled />
+                          <label htmlFor={`q-${index}-opt-${optIndex}`} className="flex-1">{opt.text}</label>
+                          {isAdmin && isCorrect && (
+                            <span className="ml-2 text-xs font-medium text-green-700">Correct</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -46,10 +78,33 @@ export default function ExamPreview({ examData }) {
           ))}
         </div>
 
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+
         <footer className="mt-8 text-center">
           <p className="text-gray-500">End of Preview</p>
         </footer>
       </div>
+    </div>
+  );
+}
+
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
+  const prev = () => onChange(Math.max(1, page - 1));
+  const next = () => onChange(Math.min(totalPages, page + 1));
+  const windowStart = Math.max(1, page - 2);
+  const windowEnd = Math.min(totalPages, windowStart + 4);
+  const pages = [];
+  for (let p = windowStart; p <= windowEnd; p++) pages.push(p);
+  return (
+    <div className="my-4 flex items-center justify-between">
+      <button onClick={prev} disabled={page === 1} className="px-3 py-1 border rounded disabled:opacity-50">Previous</button>
+      <div className="space-x-1">
+        {pages.map((p) => (
+          <button key={p} onClick={() => onChange(p)} className={`px-3 py-1 border rounded ${p === page ? 'bg-indigo-600 text-white' : ''}`}>{p}</button>
+        ))}
+      </div>
+      <button onClick={next} disabled={page === totalPages} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
     </div>
   );
 }

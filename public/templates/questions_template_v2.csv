@@ -1,0 +1,5 @@
+title,body,subject_id,sub_subject_id,category_id,difficulty,marks,negative_marks,option1,option2,option3,option4,option5,correct_answer
+"What is the capital of Japan?","<p>Select the capital city of Japan.</p>",1,102,1,1,1,0,"Tokyo","Kyoto","Osaka","Hiroshima","",1
+"Solve for x: 3x - 5 = 10","<p>Find x.</p>",2,201,2,2,2,0.5,"3","5","7","-5","",2
+"Which number is prime?","<p>Choose the prime number.</p>",2,,2,1,1,0,"9","11","15","21","",2
+
