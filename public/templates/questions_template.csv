@@ -1,0 +1,3 @@
+title,body,subject,category,difficulty,marks,negative_marks,option_a,option_b,option_c,option_d,correct_options,tags
+"What is the capital of Japan?","<p>Select the capital city of Japan.</p>",General Knowledge,Geography,1,1,0,"Tokyo","Kyoto","Osaka","Hiroshima","A","geography,asia"
+"Solve for x: 3x - 5 = 10","<p>Find the value of x in the equation 3x - 5 = 10.</p>",Mathematics,Algebra,2,2,0.5,"3","5","7","-5","B","math,algebra"
