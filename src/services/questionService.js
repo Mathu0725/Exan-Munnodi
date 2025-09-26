@@ -88,199 +88,46 @@ const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 export const questionService = {
   async getQuestions({ page = 1, limit = 10, search = '', filters = {} }) {
-    // Try API
-    try {
-      const res = await axios.get('/api/questions', { params: { page, limit, search, ...filters } });
-      return res.data;
-    } catch {}
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set('search', search);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') params.set(key, String(value));
+    });
 
-    // Fallback to mock
-    await delay(500);
-    let questions = getQuestionsFromStorage();
-
-    if (search) {
-      questions = questions.filter((q) =>
-        q.title.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (filters.subject_id) {
-      questions = questions.filter((q) => q.subject_id === parseInt(filters.subject_id));
-    }
-    if (filters.sub_subject_id) {
-      questions = questions.filter((q) => (q.sub_subject_id ?? null) === parseInt(filters.sub_subject_id));
-    }
-    if (filters.category_id) {
-      questions = questions.filter((q) => q.category_id === parseInt(filters.category_id));
-    }
-    if (filters.difficulty) {
-      questions = questions.filter((q) => q.difficulty === parseInt(filters.difficulty));
-    }
-
-    const total = questions.length;
-    const paginatedQuestions = questions.slice((page - 1) * limit, page * limit);
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    return {
-      data: paginatedQuestions,
-      meta: {
-        currentPage: page,
-        totalPages,
-        total,
-        pageSize: limit,
-      },
-    };
+    const res = await fetch(`/api/questions?${params.toString()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch questions');
+    return res.json();
   },
 
-  async createQuestion(data) {
-    try {
-      const res = await axios.post('/api/questions', data);
-      return res.data;
-    } catch {}
-
-    await delay(500);
-    const questions = getQuestionsFromStorage();
-    const newQuestion = {
-      id: Date.now(),
-      ...data,
-      status: data.status || 'draft',
-    };
-    const updatedQuestions = [...questions, newQuestion];
-    saveQuestionsToStorage(updatedQuestions);
-    try {
-      auditLogService.logAction('CREATE', 'Question', newQuestion.id, `Created question: ${newQuestion.title}`);
-    } catch {}
-    return newQuestion;
+  async getQuestion(id) {
+    const res = await fetch(`/api/questions/${id}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch question');
+    return res.json();
   },
 
-  async deleteManyQuestions({ ids }) {
-    await delay(300);
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return { success: true };
-    }
-    const questions = getQuestionsFromStorage();
-    const idSet = new Set(ids);
-    const remaining = questions.filter((q) => !idSet.has(q.id));
-    saveQuestionsToStorage(remaining);
-    return { success: true, deletedCount: questions.length - remaining.length };
-  },
-
-  async createManyQuestions({ questions }) {
-    const payloads = Array.isArray(questions) ? questions : [];
-
-    // Attempt to persist through API (Prisma-backed)
-    try {
-      for (const q of payloads) {
-        await axios.post('/api/questions', {
-          title: q.title,
-          body: q.body || '',
-          subject_id: q.subject_id,
-          sub_subject_id: q.sub_subject_id || null,
-          category_id: q.category_id,
-          difficulty: q.difficulty ?? 1,
-          marks: q.marks ?? 1,
-          negative_marks: q.negative_marks ?? 0,
-          options: (q.options || []).map((opt, idx) => ({
-            text: opt.text ?? opt.option ?? opt.label ?? '',
-            is_correct: opt.is_correct ?? opt.isCorrect ?? idx + 1 === q.correct_answer,
-          })),
-        });
-      }
-
-      try {
-        payloads.forEach((q) => auditLogService.logAction('CREATE', 'Question', `api-${q.title}`, `Imported question via API: ${q.title}`));
-      } catch {}
-
-      return { success: true, created: payloads.length };
-    } catch (error) {
-      console.warn('Falling back to local storage import', error);
-    }
-
-    // Fallback to local storage mocks if API fails
-    await delay(500);
-    const existing = getQuestionsFromStorage();
-    const normalized = payloads.map((q) => ({
-      id: Date.now() + Math.floor(Math.random() * 100000),
-      title: q.title,
-      body: q.body || '',
-      subject_id: q.subject_id,
-      sub_subject_id: q.sub_subject_id ?? null,
-      category_id: q.category_id,
-      difficulty: q.difficulty ?? 1,
-      marks: q.marks ?? 1,
-      negative_marks: q.negative_marks ?? 0,
-      time_limit: q.time_limit ?? null,
-      status: q.status || 'draft',
-      tags: Array.isArray(q.tags) ? q.tags : [],
-      options: Array.isArray(q.options) ? q.options : [],
-    }));
-    const updated = [...normalized, ...existing];
-    saveQuestionsToStorage(updated);
-    try {
-      normalized.forEach((q) => auditLogService.logAction('CREATE', 'Question', q.id, `Imported question (local): ${q.title}`));
-    } catch {}
-    return { success: true, created: normalized.length };
+  async createQuestion(payload) {
+    const res = await fetch('/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Failed to create question');
+    return res.json();
   },
 
   async updateQuestion(id, data) {
-    await delay(400);
-    let questions = getQuestionsFromStorage();
-    const existing = questions.find((q) => q.id === id);
-    if (!existing) throw new Error('Question not found');
-
-    // store previous version
-    const versions = getVersionsFromStorage();
-    const prevList = Array.isArray(versions[id]) ? versions[id] : [];
-    const versionEntry = {
-      versionId: Date.now(),
-      timestamp: new Date().toISOString(),
-      snapshot: existing,
-    };
-    const updatedVersions = { ...versions, [id]: [versionEntry, ...prevList] };
-    saveVersionsToStorage(updatedVersions);
-
-    // apply update
-    questions = questions.map((q) => (q.id === id ? { ...q, ...data } : q));
-    saveQuestionsToStorage(questions);
-    try {
-      auditLogService.logAction('UPDATE', 'Question', id, `Updated question: ${existing.title} -> ${(data.title || existing.title)}`);
-    } catch {}
-    return questions.find((q) => q.id === id);
-  },
-
-  async getQuestionVersions(id) {
-    await delay(200);
-    const versions = getVersionsFromStorage();
-    return { data: Array.isArray(versions[id]) ? versions[id] : [] };
+    const res = await fetch(`/api/questions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update question');
+    return res.json();
   },
 
   async deleteQuestion(id) {
-    await delay(300);
-    const questions = getQuestionsFromStorage();
-    const question = questions.find((q) => q.id === id);
-    if (!question) {
-      throw new Error('Question not found');
-    }
-    const remaining = questions.filter((q) => q.id !== id);
-    saveQuestionsToStorage(remaining);
-    try {
-      auditLogService.logAction('DELETE', 'Question', id, `Deleted question: ${question.title}`);
-    } catch {}
-    return { success: true, deleted: question };
-  },
-
-  async deleteManyQuestions({ ids }) {
-    await delay(300);
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return { success: true };
-    }
-    const questions = getQuestionsFromStorage();
-    const idSet = new Set(ids);
-    const toDelete = questions.filter((q) => idSet.has(q.id));
-    const remaining = questions.filter((q) => !idSet.has(q.id));
-    saveQuestionsToStorage(remaining);
-    try {
-      toDelete.forEach((q) => auditLogService.logAction('DELETE', 'Question', q.id, `Deleted question: ${q.title}`));
-    } catch {}
-    return { success: true, deletedCount: toDelete.length };
+    const res = await fetch(`/api/questions/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete question');
+    return res.json();
   },
 };

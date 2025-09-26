@@ -1,0 +1,39 @@
+{
+  "next": [
+    {
+      "id": "notifications",
+      "title": "Wire up email notifications",
+      "details": "Send emails for password reset, user approval decisions, and profile update outcomes.",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": "validation-feedback",
+      "title": "Improve validation messaging",
+      "details": "Provide inline form errors, empty states, and loading indicators across auth and admin flows.",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "testing-automation",
+      "title": "Add automated tests",
+      "details": "Cover authentication, exam creation, and profile approval workflows with integration tests.",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "performance-security",
+      "title": "Harden performance and security",
+      "details": "Add rate limiting, improve session handling, and review query performance for high-traffic endpoints.",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "deployment-readiness",
+      "title": "Document deployment",
+      "details": "Capture environment variables, build steps, and post-deploy checks for staging/production.",
+      "status": "pending",
+      "priority": "low"
+    }
+  ]
+}

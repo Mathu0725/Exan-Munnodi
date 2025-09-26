@@ -1,59 +1,64 @@
-import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { PrismaQuestionRepository } from '@/infrastructure/repositories/prismaQuestionRepository';
+import { GetQuestionListUseCase } from '@/application/use-cases/questions/getQuestionList';
+import { CreateQuestionUseCase } from '@/application/use-cases/questions/createQuestion';
+
+const questionRepository = new PrismaQuestionRepository();
+const listQuestions = new GetQuestionListUseCase(questionRepository);
+const createQuestion = new CreateQuestionUseCase(questionRepository);
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '10', 10);
-  const skip = (page - 1) * limit;
+  try {
+    const { searchParams } = new URL(request.url);
+    const filter = {
+      page: Number(searchParams.get('page') || '1'),
+      limit: Number(searchParams.get('limit') || '10'),
+      query: searchParams.get('search') || undefined,
+      subjectId: searchParams.get('subject_id') || undefined,
+      subSubjectId: searchParams.get('sub_subject_id') || undefined,
+      categoryId: searchParams.get('category_id') || undefined,
+      difficulty: searchParams.get('difficulty') || undefined,
+    };
 
-  const [total, items] = await Promise.all([
-    prisma.question.count(),
-    prisma.question.findMany({
-      skip,
-      take: limit,
-      include: { options: true },
-      orderBy: { id: 'desc' },
-    }),
-  ]);
+    const result = await listQuestions.execute(filter);
 
-  return Response.json({
-    data: items.map((q) => ({
-      id: q.id,
-      title: q.title,
-      body: q.body,
-      subject_id: q.subjectId,
-      sub_subject_id: q.subSubjectId,
-      category_id: q.categoryId,
-      difficulty: q.difficulty,
-      marks: q.marks,
-      negative_marks: q.negativeMarks,
-      options: q.options.map((o) => ({ id: String(o.id), text: o.text, is_correct: o.isCorrect })),
-      status: 'published',
-    })),
-    meta: { currentPage: page, totalPages: Math.max(1, Math.ceil(total / limit)), total, pageSize: limit },
-  });
+    return NextResponse.json({
+      data: result.data,
+      meta: {
+        currentPage: result.page,
+        totalPages: Math.max(1, Math.ceil(result.total / result.limit)),
+        total: result.total,
+        pageSize: result.limit,
+      },
+    });
+  } catch (error) {
+    console.error('GET /api/questions failed', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request) {
-  const payload = await request.json();
-  const created = await prisma.question.create({
-    data: {
-      title: payload.title,
-      body: payload.body || '',
-      subjectId: payload.subject_id,
-      subSubjectId: payload.sub_subject_id || null,
-      categoryId: payload.category_id,
-      difficulty: payload.difficulty || 1,
-      marks: payload.marks || 1,
-      negativeMarks: payload.negative_marks || 0,
-      options: {
-        create: (payload.options || []).map((o) => ({ text: o.text, isCorrect: !!o.is_correct })),
-      },
-    },
-    include: { options: true },
-  });
+  try {
+    const body = await request.json();
+    const question = await createQuestion.execute({
+      title: body.title,
+      body: body.body,
+      subjectId: body.subject_id,
+      subSubjectId: body.sub_subject_id,
+      categoryId: body.category_id,
+      difficulty: body.difficulty,
+      marks: body.marks,
+      negativeMarks: body.negative_marks,
+      status: body.status,
+      tags: body.tags,
+      options: body.options,
+    });
 
-  return Response.json({ id: created.id }, { status: 201 });
+    return NextResponse.json(question, { status: 201 });
+  } catch (error) {
+    console.error('POST /api/questions failed', error);
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
 }
 
 

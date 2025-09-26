@@ -1,5 +1,6 @@
 import './globals.css';
 import { Providers } from './providers';
+import SessionProvider from '@/components/auth/SessionProvider';
 
 export const metadata = {
   title: 'UnicomTIC Quiz - Admin',
@@ -23,7 +24,9 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Tiro+Tamil:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <SessionProvider>{children}</SessionProvider>
+        </Providers>
         <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossOrigin="anonymous"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossOrigin="anonymous"></script>
       </body>

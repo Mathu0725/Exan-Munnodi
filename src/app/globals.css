@@ -67,34 +67,34 @@
 @layer base {
   /* Dark mode Tamil text styling */
   .dark .tamil-text {
-    color: #e2e8f0;
+    color: theme('colors.midnight.100');
   }
-  
+
   .dark .tamil-heading {
-    color: #f1f5f9;
+    color: theme('colors.midnight.50');
   }
-  
+
   .dark .tamil-body {
-    color: #cbd5e1;
+    color: theme('colors.gunmetal.100');
   }
-  
+
   .dark .tamil-question {
-    color: #e2e8f0;
+    color: theme('colors.midnight.100');
   }
-  
+
   .dark .tamil-option {
-    color: #cbd5e1;
+    color: theme('colors.gunmetal.100');
   }
-  
+
   .dark .tamil-input {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #e2e8f0;
+    background-color: theme('colors.gunmetal.800');
+    border-color: theme('colors.gunmetal.700');
+    color: theme('colors.midnight.100');
   }
-  
+
   .dark .tamil-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: theme('colors.midnight.400');
+    box-shadow: 0 0 0 3px rgba(122, 153, 210, 0.15);
   }
 }
 
@@ -105,22 +105,22 @@
   }
   
   .dark-mode-safe {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    @apply bg-white text-gray-900 dark:bg-gunmetal-900 dark:text-midnight-100;
   }
   
   .dark-mode-card {
-    @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700;
+    @apply bg-white border-gray-200 dark:bg-gunmetal-800 dark:border-gunmetal-700;
   }
   
   .dark-mode-input {
-    @apply bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100;
+    @apply bg-white border-gray-300 text-gray-900 dark:bg-gunmetal-800 dark:border-gunmetal-600 dark:text-midnight-100;
   }
   
   .dark-mode-button {
-    @apply bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white;
+    @apply text-white bg-blue-600 hover:bg-blue-700 dark:bg-midnight-500 dark:hover:bg-midnight-400;
   }
   
   .dark-mode-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200;
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gunmetal-700 dark:text-midnight-100 dark:hover:bg-gunmetal-600;
   }
 }

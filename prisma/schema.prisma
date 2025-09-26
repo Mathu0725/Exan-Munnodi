@@ -7,6 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  phone       String?
+  institution String?
+  role        String    @default("Student")
+  status      String    @default("Pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  approvedById Int?
+  approvedBy   User?    @relation("UserApprovals", fields: [approvedById], references: [id])
+  approvedUsers User[]  @relation("UserApprovals")
+
+  updateRequests   UserUpdateRequest[]
+  reviewedRequests UserUpdateRequest[] @relation("UserUpdateReview")
+
+  passwordResetTokens PasswordResetToken[]
+  profile             UserProfile?
+}
+
+model UserUpdateRequest {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  changes      String
+  status       String   @default("Pending")
+  comment      String?
+  createdAt    DateTime @default(now())
+  reviewedAt   DateTime?
+  reviewedById Int?
+  reviewedBy   User?    @relation("UserUpdateReview", fields: [reviewedById], references: [id])
+}
+
+model UserProfile {
+  id         Int     @id @default(autoincrement())
+  userId     Int     @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarUrl  String?
+  bio        String?
+  address    String?
+  city       String?
+  state      String?
+  country    String?
+  postalCode String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Exam {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  status      String   @default("draft")
+  examTypeId  Int?
+  startAt     DateTime?
+  endAt       DateTime?
+  questions   String?
+  config      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  examType    ExamType? @relation(fields: [examTypeId], references: [id])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
 model Question {
   id            Int       @id @default(autoincrement())
   title         String
@@ -17,8 +94,13 @@ model Question {
   difficulty    Int        @default(1)
   marks         Int        @default(1)
   negativeMarks Int        @default(0)
-  options       Option[]
+  status        String     @default("draft")
+  tags          String?
   createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  options       Option[]
+  category      Category  @relation(fields: [categoryId], references: [id])
 }
 
 model Option {
@@ -27,6 +109,52 @@ model Option {
   isCorrect  Boolean  @default(false)
   question   Question @relation(fields: [questionId], references: [id])
   questionId Int
+}
+
+model Subject {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  order     Int       @default(0)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  subsubjects SubSubject[]
+}
+
+model SubSubject {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  subjectId Int
+
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  order     Int       @default(0)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  questions Question[]
+}
+
+model ExamType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exams     Exam[]
 }
 
 

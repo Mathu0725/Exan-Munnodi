@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionService } from '@/services/questionService';
 import { subjectService } from '@/services/subjectService';
 import { categoryService } from '@/services/masterDataService';
-import { examService } from '@/services/examService';
 
 export default function QuickCleanup() {
   const [isScanning, setIsScanning] = useState(false);
@@ -75,19 +74,7 @@ export default function QuickCleanup() {
 
       if (isOrphaned) {
         // Check if question is used in live exams
-        try {
-          const liveExamsResult = await examService.getLiveExamsUsingQuestion(question.id);
-          const liveExams = liveExamsResult?.data || [];
-          
-          // Only count as orphaned if not used in live exams
-          if (liveExams.length === 0) {
-            orphaned.push(question);
-          }
-        } catch (error) {
-          console.warn('Failed to check exam dependencies for question', question.id, error);
-          // If we can't check, assume it's safe to delete
-          orphaned.push(question);
-        }
+        orphaned.push(question);
       }
     }
 

@@ -2,95 +2,233 @@
 
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-// Mock user service to get user details including role
-const mockUserService = {
-  getUserByEmail: async (email) => {
-    // In a real app, this would be a fetch call to your backend
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const nameFromEmail = (em) => {
-      const local = em.split('@')[0] || '';
-      // Convert kebab/underscore/dots to spaces and title-case
-      const words = local.replace(/[._-]+/g, ' ').trim().split(/\s+/);
-      return words
-        .filter(Boolean)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ') || em;
-    };
+const AUTH_STORAGE_KEY = 'authUser';
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
-    if (email.startsWith('admin')) {
-      return { email, role: 'Admin', name: 'Admin User' };
-    }
-    if (email.startsWith('editor')) {
-      return { email, role: 'Content Editor', name: 'Editor User' };
-    }
-    if (email.startsWith('student')) {
-      return { email, role: 'Student', name: 'Student User' };
-    }
-    return { email, role: 'Viewer', name: nameFromEmail(email) };
-  },
+const AuthContext = createContext(undefined);
+
+const isAuthRoute = (pathname) => {
+  if (!pathname) return false;
+  return AUTH_ROUTES.some((route) => pathname.startsWith(route));
 };
 
-const AuthContext = createContext(null);
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    // Ignore JSON parsing errors for empty bodies
+  }
+
+  if (!response.ok) {
+    const message = payload?.message || 'Request failed';
+    const error = new Error(message);
+    error.details = payload;
+    error.status = response.status;
+    throw error;
+  }
+
+  return payload;
+}
+
+function storeUser(user) {
+  if (typeof window === 'undefined') return;
+  if (user) {
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+}
+
+function readStoredUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.warn('Failed to parse stored auth user', error);
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  const checkAuth = useCallback(async () => {
-    setLoading(true);
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        const userDetails = await mockUserService.getUserByEmail(token);
-        setUser(userDetails);
-        if (pathname === '/login') {
-          router.replace('/');
-        }
-      } catch (e) {
-        setUser(null);
-        localStorage.removeItem('authToken');
-      }
-    } else {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const refreshUser = useCallback(async () => {
+    const stored = readStoredUser();
+    if (!stored?.id && !stored?.email) {
+      storeUser(null);
       setUser(null);
-      if (pathname !== '/login') {
-        router.replace('/login');
-      }
+      setLoading(false);
+      return null;
     }
-    setLoading(false);
-  }, [router, pathname]);
+
+    try {
+      const param = stored.id
+        ? `id=${stored.id}`
+        : `email=${encodeURIComponent(stored.email)}`;
+      const result = await requestJson(`/api/auth/user-info?${param}`, {
+        method: 'GET',
+      });
+
+      if (result?.data) {
+        setUser(result.data);
+        storeUser(result.data);
+        setLoading(false);
+        return result.data;
+      }
+
+      storeUser(null);
+      setUser(null);
+      setLoading(false);
+      return null;
+    } catch (error) {
+      console.error('Failed to refresh user session', error);
+      storeUser(null);
+      setUser(null);
+      setLoading(false);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
-    checkAuth();
-    window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
-  }, [checkAuth]);
+    if (typeof window === 'undefined') return;
 
-  const login = async (email) => {
-    const userDetails = await mockUserService.getUserByEmail(email);
-    localStorage.setItem('authToken', userDetails.email);
-    setUser(userDetails);
-    router.push('/');
-  };
+    refreshUser();
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
+    const handleStorage = (event) => {
+      if (event.key === AUTH_STORAGE_KEY) {
+        refreshUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [refreshUser]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthRoute = isAuthRoute(pathname);
+    if (!user && !inAuthRoute) {
+      router.replace('/login');
+    } else if (user && inAuthRoute) {
+      router.replace('/');
+    }
+  }, [user, loading, pathname, router]);
+
+  const login = useCallback(
+    async ({ email, password }) => {
+      setAuthLoading(true);
+      try {
+        const payload = await requestJson('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (payload?.data) {
+          setUser(payload.data);
+          storeUser(payload.data);
+          router.replace('/');
+        }
+
+        return payload;
+      } finally {
+        setAuthLoading(false);
+        setLoading(false);
+      }
+    },
+    [router],
+  );
+
+  const logout = useCallback(() => {
+    storeUser(null);
     setUser(null);
-    router.push('/login');
-  };
+    router.replace('/login');
+  }, [router]);
 
-  const value = { user, login, logout, loading };
+  const registerUser = useCallback(async (data) => {
+    setAuthLoading(true);
+    try {
+      const payload = await requestJson('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return payload;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const requestPasswordReset = useCallback(async ({ email }) => {
+    setAuthLoading(true);
+    try {
+      const payload = await requestJson('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      return payload;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async ({ token, password }) => {
+    setAuthLoading(true);
+    try {
+      const payload = await requestJson('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+      return payload;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      authLoading,
+      login,
+      logout,
+      registerUser,
+      requestPasswordReset,
+      resetPassword,
+      refreshUser,
+    }),
+    [user, loading, authLoading, login, logout, registerUser, requestPasswordReset, resetPassword, refreshUser],
+  );
 
   if (loading) {
-    return <div className="w-screen h-screen flex items-center justify-center">Loading...</div>; // Or a proper splash screen
+    return (
+      <div className="w-screen h-screen flex items-center justify-center text-sm text-gray-600">
+        Checking authentication...
+      </div>
+    );
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

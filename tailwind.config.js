@@ -13,19 +13,30 @@ module.exports = {
         'sans': ['Noto Sans Tamil', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
-        // Custom dark mode colors
-        dark: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-        }
+        midnight: {
+          50: '#f4f7fb',
+          100: '#e8eef6',
+          200: '#cedbef',
+          300: '#a8bde3',
+          400: '#7a99d2',
+          500: '#577bc3',
+          600: '#3e5fb1',
+          700: '#334c8f',
+          800: '#2a3d72',
+          900: '#1d2a4f',
+        },
+        gunmetal: {
+          50: '#f5f6f8',
+          100: '#eaeef1',
+          200: '#cbd3da',
+          300: '#aab5c0',
+          400: '#7e8a9c',
+          500: '#5d6c80',
+          600: '#49556a',
+          700: '#3d4657',
+          800: '#303644',
+          900: '#22262f',
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

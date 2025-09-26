@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +27,8 @@ const formatDate = (dateString) => {
 
 function ExamsPage() {
   const { user } = useAuth();
-  const [revealedPasswords, setRevealedPasswords] = useState({});
+  const [passwordExamId, setPasswordExamId] = useState(null);
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['exams'],
     queryFn: examService.getExams,
@@ -68,15 +69,20 @@ function ExamsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">{formatDate(exam.start_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{formatDate(exam.end_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {exam?.config?.access_password && (
-                      <div className="mb-2 text-xs text-gray-500">
-                        Password: {revealedPasswords[exam.id] ? exam.config.access_password : '••••••'}
-                        <button
-                          onClick={() => setRevealedPasswords((prev) => ({ ...prev, [exam.id]: !prev[exam.id] }))}
-                          className="ml-2 text-indigo-600 hover:text-indigo-800"
-                        >
-                          {revealedPasswords[exam.id] ? 'Hide' : 'Show'}
-                        </button>
+                    <div className="mb-2 flex items-center justify-end gap-2 text-xs text-gray-500">
+                      <button
+                        onClick={() => setPasswordExamId(passwordExamId === exam.id ? null : exam.id)}
+                        className="inline-flex items-center rounded-full border border-indigo-200 px-3 py-1 text-indigo-600 transition hover:bg-indigo-50"
+                      >
+                        {passwordExamId === exam.id ? 'Hide exam password' : 'View exam password'}
+                      </button>
+                    </div>
+                    {passwordExamId === exam.id && (
+                      <div className="mb-3 rounded border border-dashed border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs text-indigo-700">
+                        <p className="font-semibold uppercase tracking-wide text-[0.65rem] text-indigo-500">Access Password</p>
+                        <p className="mt-1 break-all text-sm">
+                          {exam?.config?.access_password || <span className="italic text-gray-500">No password set for this exam.</span>}
+                        </p>
                       </div>
                     )}
                     <select
@@ -84,7 +90,8 @@ function ExamsPage() {
                       onChange={async (e) => {
                         const status = e.target.value;
                         await examService.updateExam(exam.id, { status });
-                        location.reload();
+                        // Refresh data without a full-page reload
+                        queryClient.invalidateQueries(['exams']);
                       }}
                       className="mr-3 px-2 py-1 border rounded"
                     >

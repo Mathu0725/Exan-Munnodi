@@ -36,109 +36,77 @@ const saveSubSubjectsToStorage = (subSubjects) => {
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 export const subjectService = {
-  async getSubjectsWithSubsubjects() {
-    await delay(500);
-    const subjects = getSubjectsFromStorage();
-    const subsubjects = getSubSubjectsFromStorage();
-    const data = subjects.map((subject) => ({
-      ...subject,
-      subsubjects: subsubjects
-        .filter((ss) => ss.subject_id === subject.id)
-        .sort((a, b) => a.order - b.order),
-    }));
-    return { data };
+  async getSubjects({ page = 1, limit = 10, search = '' } = {}) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set('search', search);
+
+    const res = await fetch(`/api/subjects?${params.toString()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch subjects');
+    return res.json();
   },
 
-  async getSubjects({ page = 1, limit = 10, search = '' }) {
-    await delay(500);
-    let subjects = getSubjectsFromStorage();
-    if (search) {
-      subjects = subjects.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    const total = subjects.length;
-    const paginatedSubjects = subjects.slice((page - 1) * limit, page * limit);
-    return { data: paginatedSubjects, total };
+  async getSubjectsWithSubsubjects() {
+    const res = await fetch('/api/subjects', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch subjects');
+    return res.json();
   },
 
   async createSubject(data) {
-    await delay(500);
-    const subjects = getSubjectsFromStorage();
-    const newSubject = {
-      id: Date.now(),
-      ...data,
-      slug: data.name.toLowerCase().replace(/\s+/g, '-'),
-    };
-    const updatedSubjects = [...subjects, newSubject];
-    saveSubjectsToStorage(updatedSubjects);
-    auditLogService.logAction('CREATE', 'Subject', newSubject.id, `Created subject: ${newSubject.name}`);
-    return newSubject;
+    const res = await fetch('/api/subjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create subject');
+    return res.json();
   },
 
   async updateSubject(id, data) {
-    await delay(500);
-    let subjects = getSubjectsFromStorage();
-    const oldSubject = subjects.find((s) => s.id === id);
-    subjects = subjects.map((s) =>
-      s.id === id ? { ...s, ...data, slug: data.name.toLowerCase().replace(/\s+/g, '-') } : s
-    );
-    saveSubjectsToStorage(subjects);
-    const updatedSubject = subjects.find((s) => s.id === id);
-    auditLogService.logAction('UPDATE', 'Subject', id, `Updated subject from "${oldSubject.name}" to "${updatedSubject.name}"`);
-    return updatedSubject;
+    const res = await fetch(`/api/subjects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update subject');
+    return res.json();
   },
 
   async deleteSubject(id) {
-    await delay(500);
-    let subjects = getSubjectsFromStorage();
-    const subjectToDelete = subjects.find((s) => s.id === id);
-    subjects = subjects.filter((s) => s.id !== id);
-    saveSubjectsToStorage(subjects);
-    if (subjectToDelete) {
-      auditLogService.logAction('DELETE', 'Subject', id, `Deleted subject: ${subjectToDelete.name}`);
-    }
-    return { success: true };
-  },
-
-  async createSubSubject(data) {
-    await delay(500);
-    const subsubjects = getSubSubjectsFromStorage();
-    const newSubSubject = {
-      id: Date.now(),
-      ...data,
-      slug: data.name.toLowerCase().replace(/\s+/g, '-'),
-    };
-    const updatedSubSubjects = [...subsubjects, newSubSubject];
-    saveSubSubjectsToStorage(updatedSubSubjects);
-    return newSubSubject;
+    const res = await fetch(`/api/subjects/${id}` , { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete subject');
+    return res.json();
   },
 
   async getSubSubjectsForSubject(subjectId) {
-    await delay(300);
     if (!subjectId) return { data: [] };
-    const subsubjects = getSubSubjectsFromStorage();
-    const filtered = subsubjects
-      .filter((ss) => ss.subject_id === parseInt(subjectId))
-      .sort((a, b) => a.order - b.order);
-    return { data: filtered };
+    const res = await fetch(`/api/subsubjects?subjectId=${subjectId}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch sub-subjects');
+    return res.json();
+  },
+
+  async createSubSubject(data) {
+    const res = await fetch('/api/subsubjects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create sub-subject');
+    return res.json();
   },
 
   async updateSubSubject(id, data) {
-    await delay(500);
-    let subsubjects = getSubSubjectsFromStorage();
-    subsubjects = subsubjects.map((ss) =>
-      ss.id === id ? { ...ss, ...data, slug: data.name.toLowerCase().replace(/\s+/g, '-') } : ss
-    );
-    saveSubSubjectsToStorage(subsubjects);
-    return subsubjects.find((ss) => ss.id === id);
+    const res = await fetch(`/api/subsubjects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update sub-subject');
+    return res.json();
   },
 
   async deleteSubSubject(id) {
-    await delay(500);
-    let subsubjects = getSubSubjectsFromStorage();
-    subsubjects = subsubjects.filter((ss) => ss.id !== id);
-    saveSubSubjectsToStorage(subsubjects);
-    return { success: true };
+    const res = await fetch(`/api/subsubjects/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete sub-subject');
+    return res.json();
   },
 };

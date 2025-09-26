@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import PageWrapper from '@/components/layout/PageWrapper';
-import { examService } from '@/services/examService';
+import { CreateExamUseCase } from '@/application/use-cases/createExam';
+import { PrismaExamRepository } from '@/infrastructure/repositories/prismaExamRepository';
 import WizardStepper from '@/components/exams/wizard/WizardStepper';
 import Step1Details from '@/components/exams/wizard/Step1Details';
 import Step2Questions from '@/components/exams/wizard/Step2Questions';
@@ -18,6 +19,9 @@ const steps = [
   { id: 'Step 4', name: 'Preview & Publish' },
 ];
 
+const examRepository = new PrismaExamRepository();
+const createExamUseCase = new CreateExamUseCase(examRepository);
+
 export default function NewExamPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -25,15 +29,15 @@ export default function NewExamPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    exam_type_id: '',
-    start_at: '',
-    end_at: '',
+    examTypeId: '',
+    startAt: '',
+    endAt: '',
     questions: [],
     config: {},
   });
 
   const createMutation = useMutation({
-    mutationFn: examService.createExam,
+    mutationFn: (payload) => createExamUseCase.execute(payload),
     onSuccess: () => {
       queryClient.invalidateQueries(['exams']);
       router.push('/exams');
@@ -41,12 +45,12 @@ export default function NewExamPage() {
   });
 
   const handleNext = (stepData) => {
-    setFormData(prev => ({ ...prev, ...stepData }));
-    setCurrentStep(prev => prev + 1);
+    setFormData((prev) => ({ ...prev, ...stepData }));
+    setCurrentStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => prev - 1);
+    setCurrentStep((prev) => prev - 1);
   };
 
   const handleSubmit = (configData) => {
@@ -59,11 +63,19 @@ export default function NewExamPage() {
     setCurrentStep(index);
   };
 
-  const handlePublish = (status = 'published') => {
-    const payload = { ...formData, status };
-    if (window.confirm('Publish this exam?')) {
-      createMutation.mutate(payload);
-    }
+  const handlePublish = (status = 'draft') => {
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      examTypeId: formData.examTypeId ? Number(formData.examTypeId) : null,
+      startAt: formData.startAt || null,
+      endAt: formData.endAt || null,
+      questions: formData.questions,
+      config: formData.config,
+      status,
+    };
+
+    createMutation.mutate(payload);
   };
 
   const renderStep = () => {
@@ -75,7 +87,14 @@ export default function NewExamPage() {
       case 2:
         return <Step3Configure data={formData} onBack={handleBack} onSubmit={handleSubmit} />;
       case 3:
-        return <Step4Preview data={formData} onBack={handleBack} onPublish={handlePublish} onEditStep={goToStep} />;
+        return (
+          <Step4Preview
+            data={formData}
+            onBack={handleBack}
+            onPublish={handlePublish}
+            onEditStep={goToStep}
+          />
+        );
       default:
         return null;
     }

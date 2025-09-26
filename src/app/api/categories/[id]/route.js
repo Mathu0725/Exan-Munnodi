@@ -1,4 +1,41 @@
 import { NextResponse } from 'next/server';
+import { PrismaCategoryRepository } from '@/infrastructure/repositories/prismaCategoryRepository';
+import { UpdateCategoryUseCase } from '@/application/use-cases/categories/updateCategory';
+import { DeleteCategoryUseCase } from '@/application/use-cases/categories/deleteCategory';
+
+const categoryRepository = new PrismaCategoryRepository();
+const updateCategory = new UpdateCategoryUseCase(categoryRepository);
+const deleteCategory = new DeleteCategoryUseCase(categoryRepository);
+
+export async function PATCH(request, { params }) {
+  try {
+    const body = await request.json();
+    const category = await updateCategory.execute({
+      id: params.id,
+      name: body.name,
+      slug: body.slug,
+      order: body.order,
+      active: body.active,
+    });
+    return NextResponse.json(category);
+  } catch (error) {
+    console.error('PATCH /api/categories/[id] failed', error);
+    const status = error.message === 'Category not found' ? 404 : 400;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+}
+
+export async function DELETE(_request, { params }) {
+  try {
+    await deleteCategory.execute(params.id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('DELETE /api/categories/[id] failed', error);
+    const status = error.message === 'Category not found' ? 404 : 500;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+}
+import { NextResponse } from 'next/server';
 
 // Mock categories data - this should be the same as in the main route
 // In a real app, this would be a shared database or state management

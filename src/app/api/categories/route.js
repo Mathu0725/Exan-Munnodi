@@ -1,4 +1,38 @@
 import { NextResponse } from 'next/server';
+import { PrismaCategoryRepository } from '@/infrastructure/repositories/prismaCategoryRepository';
+import { ListCategoriesUseCase } from '@/application/use-cases/categories/listCategories';
+import { CreateCategoryUseCase } from '@/application/use-cases/categories/createCategory';
+
+const categoryRepository = new PrismaCategoryRepository();
+const listCategories = new ListCategoriesUseCase(categoryRepository);
+const createCategory = new CreateCategoryUseCase(categoryRepository);
+
+export async function GET() {
+  try {
+    const categories = await listCategories.execute();
+    return NextResponse.json({ data: categories });
+  } catch (error) {
+    console.error('GET /api/categories failed', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const category = await createCategory.execute({
+      name: body.name,
+      slug: body.slug,
+      order: body.order,
+      active: body.active,
+    });
+    return NextResponse.json(category, { status: 201 });
+  } catch (error) {
+    console.error('POST /api/categories failed', error);
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}
+import { NextResponse } from 'next/server';
 
 // Mock categories data
 let categories = [

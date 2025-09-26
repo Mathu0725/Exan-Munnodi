@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionService } from '@/services/questionService';
 import { subjectService } from '@/services/subjectService';
 import { categoryService } from '@/services/masterDataService';
-import { examService } from '@/services/examService';
 
 export default function QuestionCleanup() {
   const [selectedFilters, setSelectedFilters] = useState({
@@ -85,21 +84,10 @@ export default function QuestionCleanup() {
 
       if (issues.length > 0) {
         // Check if question is used in live exams
-        try {
-          const liveExamsResult = await examService.getLiveExamsUsingQuestion(question.id);
-          const liveExams = liveExamsResult?.data || [];
-          
-          if (liveExams.length > 0) {
-            issues.push(`Used in ${liveExams.length} live exam(s): ${liveExams.map(e => e.title).join(', ')}`);
-          }
-        } catch (error) {
-          console.warn('Failed to check exam dependencies for question', question.id, error);
-        }
-
         orphaned.push({
           ...question,
           issues,
-          isProtected: liveExams.length > 0
+          isProtected: false
         });
       }
     }
