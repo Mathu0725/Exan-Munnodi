@@ -478,7 +478,7 @@ export default function SectionBasedQuestion({ onSave, onCancel, initialData = n
           
           <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>📝 Instructions:</strong> Create quiz questions based on the image and paragraph above. Each question should test students' understanding of the content. Use 4 answer options (A, B, C, D) and select the correct answer.
+              <strong>📝 Instructions:</strong> Create quiz questions based on the image and paragraph above. Each question should test students&apos; understanding of the content. Use 4 answer options (A, B, C, D) and select the correct answer.
             </p>
           </div>
           

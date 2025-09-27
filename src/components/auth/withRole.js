@@ -16,6 +16,11 @@ const withRole = (Component, allowedRoles) => {
       return null;
     }
 
+    // Super Admin bypasses role checks
+    if (user.role === 'Super Admin') {
+      return <Component {...props} />;
+    }
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
       return <AccessDenied />;
     }

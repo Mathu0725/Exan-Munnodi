@@ -130,4 +130,61 @@ export const questionService = {
     if (!res.ok) throw new Error('Failed to delete question');
     return res.json();
   },
+
+  async createManyQuestions(questions) {
+    const results = [];
+    const errors = [];
+
+    // Process questions one by one (could be optimized with batch API later)
+    for (let i = 0; i < questions.length; i++) {
+      try {
+        const result = await this.createQuestion(questions[i]);
+        results.push(result);
+      } catch (error) {
+        errors.push({ index: i, question: questions[i], error: error.message });
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Failed to create ${errors.length} out of ${questions.length} questions. First error: ${errors[0].error}`);
+    }
+
+    return { success: true, created: results.length, data: results };
+  },
+
+  async deleteManyQuestions({ ids }) {
+    const results = [];
+    const errors = [];
+
+    // Process deletions one by one (could be optimized with batch API later)
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        const result = await this.deleteQuestion(ids[i]);
+        results.push(result);
+      } catch (error) {
+        errors.push({ id: ids[i], error: error.message });
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Failed to delete ${errors.length} out of ${ids.length} questions. First error: ${errors[0].error}`);
+    }
+
+    return { success: true, deleted: results.length, data: results };
+  },
+
+  async getQuestionVersions(id) {
+    // For now, return mock data since version history isn't implemented
+    return {
+      data: [
+        {
+          id: 1,
+          version: 1,
+          title: 'Original version',
+          createdAt: new Date().toISOString(),
+          author: 'admin@example.com'
+        }
+      ]
+    };
+  },
 };

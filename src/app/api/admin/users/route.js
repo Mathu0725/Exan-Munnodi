@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { emailService } from '@/services/emailService';
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -93,9 +94,9 @@ export async function PATCH(request) {
 
     if (status) {
       data.status = status;
-      if (status === 'Active') {
-        data.approvedById = approvedById || null;
-      } else if (['Pending', 'Inactive', 'Rejected'].includes(status)) {
+      if (['Approved', 'Active'].includes(status)) {
+        data.approvedById = approvedById ? Number(approvedById) : null;
+      } else if (['Pending', 'Inactive', 'Rejected', 'Suspended'].includes(status)) {
         data.approvedById = null;
       }
     }
@@ -113,7 +114,22 @@ export async function PATCH(request) {
       },
     });
 
-    return NextResponse.json({ success: true, data: sanitizeUser(updated) });
+    const sanitized = sanitizeUser(updated);
+
+    if (status && ['Approved', 'Rejected', 'Suspended'].includes(status)) {
+      try {
+        await emailService.sendUserApprovalEmail(
+          sanitized.email,
+          sanitized.name,
+          status,
+          sanitized.approvedBy?.name || 'Administrator',
+        );
+      } catch (emailError) {
+        console.error('User status email failed:', emailError.message);
+      }
+    }
+
+    return NextResponse.json({ success: true, data: sanitized });
   } catch (error) {
     console.error('Admin users PATCH error:', error);
     return NextResponse.json({ success: false, message: 'Failed to update user.' }, { status: 500 });

@@ -30,7 +30,7 @@ const initialExamTypes = [
 // Categories
 export const categoryService = {
   async getAll() {
-    const res = await fetch('/api/categories', { cache: 'no-store' });
+    const res = await fetch('/api/categories?limit=1000', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch categories');
     return res.json();
   },

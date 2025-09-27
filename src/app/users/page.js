@@ -14,6 +14,7 @@ function UsersPage() {
   const { user: currentUser } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState('Pending');
+  const [banner, setBanner] = useState(null); // { type: 'success' | 'error', text: string }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-users', statusFilter],
@@ -39,11 +40,22 @@ function UsersPage() {
       suspend: 'Suspended',
     };
 
-    updateMutation.mutate({
-      id: user.id,
-      status: statusMap[action],
-      approvedById: action === 'approve' ? currentUser?.id : undefined,
-    });
+    updateMutation.mutate(
+      {
+        id: user.id,
+        status: statusMap[action],
+        approvedById: action === 'approve' ? currentUser?.id : undefined,
+      },
+      {
+        onSuccess: () => {
+          const verb = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'suspended';
+          setBanner({ type: 'success', text: `User ${verb} successfully.` });
+        },
+        onError: (err) => {
+          setBanner({ type: 'error', text: err?.message || 'Failed to update user.' });
+        },
+      }
+    );
   };
 
   const users = data?.data || [];
@@ -81,6 +93,19 @@ function UsersPage() {
           </select>
         </div>
       </div>
+
+      {banner && (
+        <div
+          role="alert"
+          className={`mb-4 rounded-md px-3 py-2 text-sm ${
+            banner.type === 'success'
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {banner.text}
+        </div>
+      )}
 
       {isLoading && <p>Loading users...</p>}
       {error && <p className="text-red-500">Error loading users.</p>}

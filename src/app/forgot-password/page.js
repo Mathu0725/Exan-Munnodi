@@ -52,19 +52,33 @@ export default function ForgotPasswordPage() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                {...register('email', { required: 'Email is required' })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'forgot-email-error' : undefined}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Enter a valid email address',
+                },
+              })}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 placeholder="you@example.com"
               />
-              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
+            {errors.email && (
+              <p id="forgot-email-error" className="mt-2 text-sm text-red-600" role="alert">
+                {errors.email.message}
+              </p>
+            )}
             </div>
 
             {serverError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+              {serverError}
+            </p>
             )}
 
             {successMessage && (
-              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 whitespace-pre-line">
+            <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 whitespace-pre-line" role="status">
                 {successMessage}
               </p>
             )}
@@ -72,7 +86,8 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={authLoading}
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70"
+            aria-busy={authLoading}
+            className="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {authLoading ? 'Sending...' : 'Send reset instructions'}
             </button>

@@ -204,6 +204,7 @@ export default function ImportUploader() {
     mutationFn: questionService.createManyQuestions, // Assumes this service exists
     onSuccess: () => {
       queryClient.invalidateQueries(['questions']);
+      queryClient.invalidateQueries(['dashboardStats']);
       alert('Successfully imported questions!');
       handleClear();
     },
@@ -293,7 +294,7 @@ export default function ImportUploader() {
         negative_marks: defaultNegativeMarks || 0,
       }));
       
-      mutation.mutate({ questions: questionsWithDefaults });
+      mutation.mutate(questionsWithDefaults);
     }
   };
 

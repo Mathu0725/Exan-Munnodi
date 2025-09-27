@@ -3,6 +3,7 @@ import { PrismaUserRepository } from '@/infrastructure/repositories/prismaUserRe
 import { PrismaUserProfileRepository } from '@/infrastructure/repositories/prismaUserProfileRepository';
 import { PrismaUserUpdateRequestRepository } from '@/infrastructure/repositories/prismaUserUpdateRequestRepository';
 import { ApproveProfileUpdateUseCase } from '@/application/use-cases/users/approveProfileUpdate';
+import { emailService } from '@/services/emailService';
 
 const userRepository = new PrismaUserRepository();
 const profileRepository = new PrismaUserProfileRepository();
@@ -23,6 +24,22 @@ export async function PATCH(request, { params }) {
       approve: body.approve,
       comment: body.comment,
     });
+
+    const { request, user } = result;
+
+    const reviewerName = request.reviewedBy?.name || user.approvedBy?.name || 'Administrator';
+
+    try {
+      await emailService.sendProfileUpdateResultEmail(
+        user.email,
+        user.name,
+        request.status,
+        reviewerName,
+        request.comment,
+      );
+    } catch (emailError) {
+      console.error('Profile update result email failed:', emailError.message);
+    }
 
     return NextResponse.json({ data: result });
   } catch (error) {

@@ -66,8 +66,7 @@ export default function Sidebar({ onNavigate, className = '', showCloseButton = 
       </div>
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-1">
-          {menuItems
-            .filter((item) => !user || !item.roles || item.roles.includes(user.role))
+          {(user?.role === 'Super Admin' ? menuItems : menuItems.filter((item) => !user || !item.roles || item.roles.includes(user.role)))
             .map((item) => {
               const isActive = item.path === '/' ? pathname === '/' : pathname.startsWith(item.path);
               return (

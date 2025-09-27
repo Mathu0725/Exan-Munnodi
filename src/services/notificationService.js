@@ -13,13 +13,18 @@ const saveNotifications = (items) => {
 };
 
 export const notificationService = {
-  async sendExamNotification({ examId, subject, message, recipients }) {
+  async sendExamNotification({ examId, subject, message, html, recipients }) {
     // Try real email first via API
     try {
       const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: recipients, subject, text: message }),
+        body: JSON.stringify({ 
+          to: recipients, 
+          subject, 
+          text: message,
+          html: html || `<pre>${message}</pre>`
+        }),
       });
       if (res.ok) {
         return await res.json();
@@ -33,6 +38,7 @@ export const notificationService = {
       examId,
       subject,
       message,
+      html: html || `<pre>${message}</pre>`,
       recipients,
       sentAt: new Date().toISOString(),
     };

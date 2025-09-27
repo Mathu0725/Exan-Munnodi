@@ -58,8 +58,16 @@ export default function RegisterPage() {
             <input
               id="name"
               type="text"
-              {...register('name', { required: 'Name is required' })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? 'name-error' : undefined}
+              {...register('name', {
+                required: 'Name is required',
+                minLength: {
+                  value: 3,
+                  message: 'Name must be at least 3 characters',
+                },
+              })}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
               placeholder="John Doe"
             />
             {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>}
@@ -73,8 +81,16 @@ export default function RegisterPage() {
               id="email"
               type="email"
               autoComplete="email"
-              {...register('email', { required: 'Email is required' })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'register-email-error' : undefined}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Enter a valid email address',
+                },
+              })}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
               placeholder="you@example.com"
             />
             {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
@@ -114,6 +130,8 @@ export default function RegisterPage() {
               id="password"
               type="password"
               autoComplete="new-password"
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'register-password-error' : undefined}
               {...register('password', {
                 required: 'Password is required',
                 minLength: {
@@ -121,23 +139,35 @@ export default function RegisterPage() {
                   message: 'Password must be at least 8 characters',
                 },
               })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
               placeholder="Choose a strong password"
             />
             {errors.password && (
-              <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+              <p id="register-password-error" className="mt-2 text-sm text-red-600" role="alert">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
           {serverError && (
             <div className="md:col-span-2">
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 whitespace-pre-line">{serverError}</p>
+              <p
+                className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 whitespace-pre-line"
+                role="alert"
+                aria-live="assertive"
+              >
+                {serverError}
+              </p>
             </div>
           )}
 
           {successMessage && (
             <div className="md:col-span-2">
-              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 whitespace-pre-line">
+              <p
+                className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 whitespace-pre-line"
+                role="status"
+                aria-live="polite"
+              >
                 {successMessage}
               </p>
             </div>
@@ -150,7 +180,8 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={authLoading}
-              className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70"
+              aria-busy={authLoading}
+              className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {authLoading ? 'Submitting...' : 'Submit for approval'}
             </button>

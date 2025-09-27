@@ -1,14 +1,14 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
-import { isBefore } from 'date-fns';
+// plain JS date checks; no external deps
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { token, password } = await request.json();
+    const { token, password, otp } = await request.json();
 
-    if (!token || !password) {
-      return NextResponse.json({ success: false, message: 'Token and new password are required.' }, { status: 400 });
+    if (!token || !password || !otp) {
+      return NextResponse.json({ success: false, message: 'Token, OTP, and new password are required.' }, { status: 400 });
     }
 
     if (password.length < 8) {
@@ -17,8 +17,12 @@ export async function POST(request) {
 
     const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
 
-    if (!resetToken || resetToken.usedAt || isBefore(resetToken.expiresAt, new Date())) {
+    if (!resetToken || resetToken.usedAt || (new Date(resetToken.expiresAt).getTime() < Date.now())) {
       return NextResponse.json({ success: false, message: 'Invalid or expired token.' }, { status: 400 });
+    }
+
+    if ((resetToken.otp || '').trim() !== String(otp).trim()) {
+      return NextResponse.json({ success: false, message: 'Invalid OTP code.' }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

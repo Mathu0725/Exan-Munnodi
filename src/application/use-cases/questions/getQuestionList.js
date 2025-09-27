@@ -6,7 +6,12 @@ export class GetQuestionListUseCase {
   }
 
   async execute(filter = {}) {
-    const questions = await this.questionRepository.list(filter);
-    return questions.map(createQuestion);
+    const { data, total, page, limit } = await this.questionRepository.list(filter);
+    return {
+      data: data.map(createQuestion),
+      total,
+      page,
+      limit,
+    };
   }
 }

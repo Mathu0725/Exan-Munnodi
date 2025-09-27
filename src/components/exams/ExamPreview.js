@@ -7,12 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMemo, useState } from 'react';
 
 export default function ExamPreview({ examData, onEditDetails, onEditQuestions, onEditConfig }) {
-  if (!examData) return null;
-
-  const title = examData.title || examData.name || 'Untitled Exam';
-  const description = examData.description || examData.summary || '';
-  const questions = Array.isArray(examData.questions) ? examData.questions : [];
-  const config = examData.config || {};
+  const title = (examData?.title || examData?.name || 'Untitled Exam');
+  const description = (examData?.description || examData?.summary || '');
+  const questions = Array.isArray(examData?.questions) ? examData.questions : [];
+  const config = examData?.config || {};
 
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';

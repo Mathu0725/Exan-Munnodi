@@ -50,12 +50,22 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  {...register('email', { required: 'Email is required' })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Enter a valid email address',
+                    },
+                  })}
+                  className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   placeholder="you@example.com"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                  <p id="email-error" className="mt-2 text-sm text-red-600" role="alert">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -67,24 +77,31 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
                   {...register('password', { required: 'Password is required' })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   placeholder="••••••••"
                 />
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+                  <p id="password-error" className="mt-2 text-sm text-red-600" role="alert">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
             </div>
 
             {serverError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="assertive">
+                {serverError}
+              </p>
             )}
 
             <button
               type="submit"
               disabled={authLoading}
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70"
+              aria-busy={authLoading}
+              className="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {authLoading ? 'Signing in...' : 'Sign in'}
             </button>

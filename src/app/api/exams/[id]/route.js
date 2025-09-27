@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaExamRepository } from '@/infrastructure/repositories/prismaExamRepository';
-import { UpdateExamUseCase } from '@/application/use-cases/exams/updateExam';
+import { UpdateExamUseCase } from '@/application/use-cases/updateExam';
 
 const examRepository = new PrismaExamRepository();
 const updateExam = new UpdateExamUseCase(examRepository);

@@ -1,32 +1,21 @@
-import nodemailer from 'nodemailer';
+import { sendMail } from '@/lib/mailer';
 
 export async function POST(request) {
   const { to = [], subject = '', text = '', html } = await request.json();
 
-  if (!process.env.SMTP_HOST) {
-    return new Response(JSON.stringify({ error: 'SMTP not configured' }), { status: 500 });
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT || 587) === 465,
-      auth: { 
-        user: process.env.SMTP_USER, 
-        pass: process.env.SMTP_PASS 
-      },
-    });
-
-    const info = await transporter.sendMail({
-      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-      to: Array.isArray(to) ? to.join(',') : String(to),
+    const result = await sendMail({
+      to,
       subject,
       text,
-      html: html || `<pre>${text}</pre>`,
+      html,
     });
 
-    return Response.json({ success: true, id: info.messageId });
+    if (!result.success) {
+      return new Response(JSON.stringify({ error: result.error || 'Email sending failed' }), { status: 500 });
+    }
+
+    return Response.json({ success: true, id: result.id });
   } catch (error) {
     console.error('SMTP Error:', error.message);
     return new Response(JSON.stringify({ 

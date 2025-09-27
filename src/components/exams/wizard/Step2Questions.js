@@ -262,7 +262,7 @@ export default function Step2Questions({ data, onNext, onBack }) {
                   </div>
                 );
               })}
-              {rules.length === 0 && <div className="text-sm text-gray-500">No rules yet. Click "Add Rule".</div>}
+              {rules.length === 0 && <div className="text-sm text-gray-500">No rules yet. Click &quot;Add Rule&quot;.</div>}
             </div>
             <div className="mt-3 text-right">
               <button type="button" onClick={autoSelectByRules} className="px-3 py-1 bg-indigo-600 text-white rounded">Auto Select</button>

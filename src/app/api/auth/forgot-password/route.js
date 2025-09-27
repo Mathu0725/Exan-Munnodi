@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import { addMinutes } from 'date-fns';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { emailService } from '@/services/emailService';
 
 export async function POST(request) {
   try {
@@ -18,19 +18,26 @@ export async function POST(request) {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = addMinutes(new Date(), 30);
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
     await prisma.passwordResetToken.create({
       data: {
         token,
         userId: user.id,
         expiresAt,
+        otp,
       },
     });
 
-    console.log(`Password reset token for ${email}: ${token}`);
+    try {
+      await emailService.sendPasswordResetEmail(user.email, token, otp);
+    } catch (emailError) {
+      console.error('Password reset email failed:', emailError.message);
+      console.log(`Password reset token for ${email}: ${token}`);
+    }
 
-    return NextResponse.json({ success: true, message: 'If an account exists, reset instructions were sent.' });
+    return NextResponse.json({ success: true, message: 'If an account exists, reset code and link were sent.' });
   } catch (error) {
     console.error('Forgot password error:', error);
     return NextResponse.json({ success: false, message: 'Failed to process request.' }, { status: 500 });

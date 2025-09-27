@@ -28,6 +28,9 @@ model User {
 
   passwordResetTokens PasswordResetToken[]
   profile             UserProfile?
+
+  @@index([status, role, createdAt])
+  @@index([name])
 }
 
 model UserUpdateRequest {
@@ -41,6 +44,11 @@ model UserUpdateRequest {
   reviewedAt   DateTime?
   reviewedById Int?
   reviewedBy   User?    @relation("UserUpdateReview", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([reviewedById])
+  @@index([createdAt])
 }
 
 model UserProfile {
@@ -72,6 +80,9 @@ model Exam {
   updatedAt   DateTime @updatedAt
 
   examType    ExamType? @relation(fields: [examTypeId], references: [id])
+
+  @@index([status, examTypeId, createdAt])
+  @@index([title])
 }
 
 model PasswordResetToken {
@@ -82,6 +93,10 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
   usedAt    DateTime?
+  otp       String?
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Question {
@@ -101,6 +116,12 @@ model Question {
 
   options       Option[]
   category      Category  @relation(fields: [categoryId], references: [id])
+
+  @@index([subjectId, subSubjectId, categoryId])
+  @@index([difficulty])
+  @@index([createdAt])
+  @@index([title])
+  @@index([status])
 }
 
 model Option {
@@ -109,6 +130,8 @@ model Option {
   isCorrect  Boolean  @default(false)
   question   Question @relation(fields: [questionId], references: [id])
   questionId Int
+
+  @@index([questionId])
 }
 
 model Subject {
@@ -121,6 +144,9 @@ model Subject {
   updatedAt DateTime  @updatedAt
 
   subsubjects SubSubject[]
+
+  @@index([active])
+  @@index([order])
 }
 
 model SubSubject {
@@ -131,6 +157,8 @@ model SubSubject {
   subjectId Int
 
   subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
 }
 
 model Category {
@@ -143,6 +171,9 @@ model Category {
   updatedAt DateTime  @updatedAt
 
   questions Question[]
+
+  @@index([active])
+  @@index([order])
 }
 
 model ExamType {
@@ -155,6 +186,9 @@ model ExamType {
   updatedAt DateTime @updatedAt
 
   exams     Exam[]
+
+  @@index([active])
+  @@index([order])
 }
 
 

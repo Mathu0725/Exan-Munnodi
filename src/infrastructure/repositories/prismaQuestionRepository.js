@@ -87,7 +87,7 @@ export class PrismaQuestionRepository extends QuestionRepository {
           options: {
             create: (questionEntity.options || []).map((opt) => ({
               text: opt.text ?? '',
-              isCorrect: !!opt.isCorrect,
+              isCorrect: !!(opt.isCorrect ?? opt.is_correct),
             })),
           },
         },
@@ -105,7 +105,7 @@ export class PrismaQuestionRepository extends QuestionRepository {
         options: {
           create: (questionEntity.options || []).map((opt) => ({
             text: opt.text ?? '',
-            isCorrect: !!opt.isCorrect,
+            isCorrect: !!(opt.isCorrect ?? opt.is_correct),
           })),
         },
       },

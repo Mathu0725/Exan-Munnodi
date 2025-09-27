@@ -81,6 +81,10 @@
 - `npm run start` – Start production server.
 - `npm run lint` – Run lint checks.
 - `npx prisma studio` – Prisma web UI for inspecting database.
+
+## Deployment
+
+See `docs/DEPLOY.md` for environment variables, build steps, and post-deploy checks.
 # UnicomTIC Quiz - Admin
 
 Next.js 14 (App Router) admin console for managing subjects, questions, and exams. Includes a student runner and admin-only results. Now partially wired to a Prisma (SQLite) API.
