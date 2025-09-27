@@ -27,10 +27,14 @@ export default function Sidebar({ onNavigate, className = '', showCloseButton = 
     { name: 'Exam Types', path: '/exam-types', roles: ['Admin', 'Content Editor', 'Reviewer', 'Analyst'] },
     { name: 'Question Bank', path: '/questions', roles: ['Admin', 'Content Editor', 'Reviewer'] },
     { name: 'Exams', path: '/exams', roles: ['Admin', 'Content Editor', 'Reviewer'] },
+    { name: 'Student Groups', path: '/student-groups', roles: ['Admin', 'Content Editor'] },
     { name: 'Bulk Actions', path: '/bulk-actions', roles: ['Admin', 'Content Editor'] },
     { name: 'Question Cleanup', path: '/question-cleanup', roles: ['Admin', 'Content Editor'] },
     { name: 'Users & Roles', path: '/users', roles: ['Admin'] },
+    { name: 'Staff Management', path: '/admin/staff-management', roles: ['Super Admin'] },
+    { name: 'Exam Reports', path: '/admin/exam-reports', roles: ['Admin', 'Content Editor'] },
     { name: 'Audit Logs', path: '/audit-logs', roles: ['Admin'] },
+    { name: 'My Profile & Results', path: '/student-profile', roles: ['Student'] },
     { name: 'Profile', path: '/profile', roles: ['Admin', 'Content Editor', 'Reviewer', 'Analyst', 'Student'] },
   ];
 

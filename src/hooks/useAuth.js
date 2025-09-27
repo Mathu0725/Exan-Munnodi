@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/reset-with-otp'];
+const AUTH_ROUTES = ['/login', '/login-3d', '/register', '/forgot-password', '/forgot-password-3d', '/reset-password', '/reset-with-otp'];
 const AuthContext = createContext(undefined);
 
 const isAuthRoute = (pathname) => {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
 
     const inAuthRoute = isAuthRoute(pathname);
     if (!user && !inAuthRoute) {
-      router.replace('/login');
+      router.replace('/login-3d');
     } else if (user && inAuthRoute) {
       router.replace('/');
     }

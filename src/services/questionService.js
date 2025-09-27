@@ -138,7 +138,7 @@ export const questionService = {
     // Process questions one by one (could be optimized with batch API later)
     for (let i = 0; i < questions.length; i++) {
       try {
-        const result = await this.createQuestion(questions[i]);
+        const result = await questionService.createQuestion(questions[i]);
         results.push(result);
       } catch (error) {
         errors.push({ index: i, question: questions[i], error: error.message });
@@ -159,7 +159,7 @@ export const questionService = {
     // Process deletions one by one (could be optimized with batch API later)
     for (let i = 0; i < ids.length; i++) {
       try {
-        const result = await this.deleteQuestion(ids[i]);
+        const result = await questionService.deleteQuestion(ids[i]);
         results.push(result);
       } catch (error) {
         errors.push({ id: ids[i], error: error.message });
@@ -178,11 +178,15 @@ export const questionService = {
     return {
       data: [
         {
-          id: 1,
+          versionId: 1,
           version: 1,
-          title: 'Original version',
-          createdAt: new Date().toISOString(),
-          author: 'admin@example.com'
+          timestamp: new Date().toISOString(),
+          author: 'admin@example.com',
+          snapshot: {
+            title: 'Original version',
+            difficulty: 1,
+            marks: 1
+          }
         }
       ]
     };

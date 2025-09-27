@@ -20,6 +20,19 @@ export class PrismaQuestionRepository extends QuestionRepository {
     return normalize(question);
   }
 
+  async findDuplicates(title, subjectId, categoryId) {
+    const duplicates = await prisma.question.findMany({
+      where: {
+        title: { equals: title, mode: 'insensitive' },
+        subjectId: Number(subjectId),
+        categoryId: Number(categoryId),
+      },
+      include: { options: true },
+      orderBy: { createdAt: 'asc' }, // Get oldest first
+    });
+    return duplicates.map(normalize);
+  }
+
   async list(filter = {}) {
     const {
       page = 1,
@@ -115,6 +128,14 @@ export class PrismaQuestionRepository extends QuestionRepository {
   }
 
   async delete(id) {
-    await prisma.question.delete({ where: { id: Number(id) } });
+    // First delete all related options
+    await prisma.option.deleteMany({
+      where: { questionId: Number(id) }
+    });
+    
+    // Then delete the question
+    await prisma.question.delete({ 
+      where: { id: Number(id) } 
+    });
   }
 }

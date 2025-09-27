@@ -14,6 +14,7 @@ model User {
   password    String
   phone       String?
   institution String?
+  avatarUrl   String?
   role        String    @default("Student")
   status      String    @default("Pending")
   createdAt   DateTime  @default(now())
@@ -28,6 +29,11 @@ model User {
 
   passwordResetTokens PasswordResetToken[]
   profile             UserProfile?
+  
+  // Student Group Relations
+  groupMemberships    StudentGroupMember[]
+  createdGroups       StudentGroup[]
+  notifications       Notification[]
 
   @@index([status, role, createdAt])
   @@index([name])
@@ -76,10 +82,18 @@ model Exam {
   endAt       DateTime?
   questions   String?
   config      String?
+  isScheduled Boolean  @default(false)
+  scheduledAt DateTime?
+  rescheduledAt DateTime?
+  rescheduleReason String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   examType    ExamType? @relation(fields: [examTypeId], references: [id])
+  
+  // Student Group Relations
+  examGroups  ExamGroup[]
+  notifications Notification[]
 
   @@index([status, examTypeId, createdAt])
   @@index([title])
@@ -189,6 +203,78 @@ model ExamType {
 
   @@index([active])
   @@index([order])
+}
+
+model StudentGroup {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  color       String?  @default("#3B82F6") // Default blue color
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members     StudentGroupMember[]
+  examGroups  ExamGroup[]
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById Int
+  notifications Notification[]
+
+  @@index([isActive])
+  @@index([createdById])
+}
+
+model StudentGroupMember {
+  id      Int         @id @default(autoincrement())
+  userId  Int
+  groupId Int
+  joinedAt DateTime  @default(now())
+
+  // Relations
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model ExamGroup {
+  id      Int @id @default(autoincrement())
+  examId  Int
+  groupId Int
+
+  // Relations
+  exam    Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, groupId])
+  @@index([examId])
+  @@index([groupId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  userId    Int?
+  groupId   Int?
+  examId    Int?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     StudentGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  exam      Exam?     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([groupId])
+  @@index([examId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 
 

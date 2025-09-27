@@ -10,6 +10,24 @@ export class CreateQuestionUseCase {
     if (!input?.subjectId) throw new Error('Subject is required');
     if (!input?.categoryId) throw new Error('Category is required');
 
+    // Check for duplicates
+    const duplicates = await this.questionRepository.findDuplicates(
+      input.title,
+      input.subjectId,
+      input.categoryId
+    );
+
+    if (duplicates.length > 0) {
+      // If duplicates exist, remove all duplicates and keep only the new one
+      console.log(`Found ${duplicates.length} duplicate(s) for question: "${input.title}"`);
+      
+      // Delete all existing duplicates
+      for (const duplicate of duplicates) {
+        await this.questionRepository.delete(duplicate.id);
+        console.log(`Removed duplicate question ID: ${duplicate.id}`);
+      }
+    }
+
     const questionEntity = createQuestion({
       title: input.title,
       body: input.body ?? '',
