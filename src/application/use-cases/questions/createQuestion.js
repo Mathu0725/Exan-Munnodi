@@ -19,8 +19,10 @@ export class CreateQuestionUseCase {
 
     if (duplicates.length > 0) {
       // If duplicates exist, remove all duplicates and keep only the new one
-      console.log(`Found ${duplicates.length} duplicate(s) for question: "${input.title}"`);
-      
+      console.log(
+        `Found ${duplicates.length} duplicate(s) for question: "${input.title}"`
+      );
+
       // Delete all existing duplicates
       for (const duplicate of duplicates) {
         await this.questionRepository.delete(duplicate.id);

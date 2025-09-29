@@ -12,7 +12,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const filter = {
       search: searchParams.get('search') ?? undefined,
-      active: searchParams.get('active') === null ? undefined : searchParams.get('active') === 'true',
+      active:
+        searchParams.get('active') === null
+          ? undefined
+          : searchParams.get('active') === 'true',
     };
     const examTypes = await listExamTypes.execute(filter);
     return NextResponse.json({ data: examTypes });
@@ -32,4 +35,3 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-

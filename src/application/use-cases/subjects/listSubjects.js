@@ -10,4 +10,3 @@ export class ListSubjectsUseCase {
     return subjects.map(createSubject);
   }
 }
-

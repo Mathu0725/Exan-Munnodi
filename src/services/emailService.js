@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 export const emailService = {
   async sendPasswordResetEmail(email, token, otp) {
@@ -24,20 +25,22 @@ export const emailService = {
 
   async sendUserApprovalEmail(email, name, status, approverName) {
     const subjectMap = {
-      'Approved': 'Account Approved - Exam Munnodi',
-      'Rejected': 'Account Update - Exam Munnodi',
-      'Suspended': 'Account Update - Exam Munnodi',
+      Approved: 'Account Approved - Exam Munnodi',
+      Rejected: 'Account Update - Exam Munnodi',
+      Suspended: 'Account Update - Exam Munnodi',
     };
 
     const messageMap = {
-      'Approved': `Your account has been approved by ${approverName}. You can now log in and access the platform.`,
-      'Rejected': `Your account registration has been reviewed and rejected by ${approverName}. Please contact support for more information.`,
-      'Suspended': `Your account has been suspended by ${approverName}. Please contact support for more information.`,
+      Approved: `Your account has been approved by ${approverName}. You can now log in and access the platform.`,
+      Rejected: `Your account registration has been reviewed and rejected by ${approverName}. Please contact support for more information.`,
+      Suspended: `Your account has been suspended by ${approverName}. Please contact support for more information.`,
     };
 
     const subject = subjectMap[status] || 'Account Update - Exam Munnodi';
-    const message = messageMap[status] || `Your account status has been updated to ${status} by ${approverName}.`;
-    
+    const message =
+      messageMap[status] ||
+      `Your account status has been updated to ${status} by ${approverName}.`;
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Account Status Update</h2>
@@ -50,10 +53,16 @@ export const emailService = {
     return this.sendEmail({ to: [email], subject, text: message, html });
   },
 
-  async sendProfileUpdateResultEmail(email, name, status, reviewerName, comment = '') {
+  async sendProfileUpdateResultEmail(
+    email,
+    name,
+    status,
+    reviewerName,
+    comment = ''
+  ) {
     const subject = 'Profile Update Result - Exam Munnodi';
     const message = `Your profile update request has been ${status.toLowerCase()} by ${reviewerName}. ${comment || ''}`;
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Profile Update Result</h2>
@@ -82,8 +91,18 @@ export const emailService = {
 
       return res.json();
     } catch (error) {
-      console.warn('[emailService] Falling back to console log:', error.message);
-      console.log('[emailService] To:', to, '\nSubject:', subject, '\nMessage:', text);
+      console.warn(
+        '[emailService] Falling back to console log:',
+        error.message
+      );
+      console.log(
+        '[emailService] To:',
+        to,
+        '\nSubject:',
+        subject,
+        '\nMessage:',
+        text
+      );
       return { success: false, fallback: true };
     }
   },

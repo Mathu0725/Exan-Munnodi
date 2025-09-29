@@ -34,5 +34,3 @@ export function updateExamEntity(existingExam, updates = {}) {
     config: updates.config ?? existingExam.config,
   };
 }
-
-

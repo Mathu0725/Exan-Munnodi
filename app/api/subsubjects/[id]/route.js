@@ -35,4 +35,3 @@ export async function DELETE(_request, { params }) {
     return NextResponse.json({ error: error.message }, { status });
   }
 }
-

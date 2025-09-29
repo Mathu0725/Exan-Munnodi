@@ -9,4 +9,3 @@ export function createExamType(props) {
     updatedAt: props.updatedAt ?? props.updated_at ?? null,
   };
 }
-

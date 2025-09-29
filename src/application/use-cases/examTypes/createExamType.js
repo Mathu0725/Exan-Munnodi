@@ -18,4 +18,3 @@ export class CreateExamTypeUseCase {
     return this.examTypeRepository.save(examTypeEntity);
   }
 }
-

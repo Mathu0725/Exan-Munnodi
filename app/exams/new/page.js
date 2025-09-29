@@ -37,29 +37,29 @@ export default function NewExamPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload) => createExamUseCase.execute(payload),
+    mutationFn: payload => createExamUseCase.execute(payload),
     onSuccess: () => {
       queryClient.invalidateQueries(['exams']);
       router.push('/exams');
     },
   });
 
-  const handleNext = (stepData) => {
-    setFormData((prev) => ({ ...prev, ...stepData }));
-    setCurrentStep((prev) => prev + 1);
+  const handleNext = stepData => {
+    setFormData(prev => ({ ...prev, ...stepData }));
+    setCurrentStep(prev => prev + 1);
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => prev - 1);
+    setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = (configData) => {
+  const handleSubmit = configData => {
     const finalData = { ...formData, config: configData };
     setFormData(finalData);
     setCurrentStep(3);
   };
 
-  const goToStep = (index) => {
+  const goToStep = index => {
     setCurrentStep(index);
   };
 
@@ -83,9 +83,21 @@ export default function NewExamPage() {
       case 0:
         return <Step1Details data={formData} onNext={handleNext} />;
       case 1:
-        return <Step2Questions data={formData} onNext={handleNext} onBack={handleBack} />;
+        return (
+          <Step2Questions
+            data={formData}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        );
       case 2:
-        return <Step3Configure data={formData} onBack={handleBack} onSubmit={handleSubmit} />;
+        return (
+          <Step3Configure
+            data={formData}
+            onBack={handleBack}
+            onSubmit={handleSubmit}
+          />
+        );
       case 3:
         return (
           <Step4Preview
@@ -101,8 +113,8 @@ export default function NewExamPage() {
   };
 
   return (
-    <PageWrapper title="Create New Exam">
-      <div className="bg-white p-6 rounded-lg shadow">
+    <PageWrapper title='Create New Exam'>
+      <div className='bg-white p-6 rounded-lg shadow'>
         <WizardStepper currentStep={currentStep} steps={steps} />
         {renderStep()}
       </div>

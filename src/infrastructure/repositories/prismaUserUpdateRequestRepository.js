@@ -88,4 +88,3 @@ export class PrismaUserUpdateRequestRepository extends UserUpdateRequestReposito
     return normalize(request);
   }
 }
-

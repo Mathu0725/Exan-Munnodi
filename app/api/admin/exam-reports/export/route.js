@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
   try {
@@ -13,8 +13,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'e933e3c8e4e4a7b4a2e5d1f8a7c6b3e2a1d0c9f8b7e6a5d4c3b2a1f0e9d8c7b6');
-    
+    const decoded = verifyAccessToken(token);
+
     if (!['Admin', 'Content Editor'].includes(decoded.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -28,11 +28,11 @@ export async function GET(request) {
     const status = searchParams.get('status');
 
     const where = {};
-    
+
     if (examId) {
       where.examId = parseInt(examId);
     }
-    
+
     if (startDate || endDate) {
       where.submittedAt = {};
       if (startDate) {
@@ -42,7 +42,7 @@ export async function GET(request) {
         where.submittedAt.lte = new Date(endDate);
       }
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -67,7 +67,7 @@ export async function GET(request) {
 
     // Apply score filters
     let filteredResults = results;
-    
+
     if (minScore || maxScore) {
       filteredResults = results.filter(result => {
         const percentage = (result.score / result.totalMarks) * 100;
@@ -82,18 +82,22 @@ export async function GET(request) {
       'Student Name': result.user?.name || 'Unknown',
       'Student Email': result.user?.email || 'Unknown',
       'Exam Title': result.exam?.title || 'Unknown',
-      'Score': result.score,
+      Score: result.score,
       'Total Marks': result.totalMarks,
-      'Percentage': ((result.score / result.totalMarks) * 100).toFixed(2) + '%',
-      'Status': result.status || 'Unknown',
-      'Submitted At': result.submittedAt ? new Date(result.submittedAt).toLocaleString() : 'Not submitted',
+      Percentage: ((result.score / result.totalMarks) * 100).toFixed(2) + '%',
+      Status: result.status || 'Unknown',
+      'Submitted At': result.submittedAt
+        ? new Date(result.submittedAt).toLocaleString()
+        : 'Not submitted',
     }));
 
     // Convert to CSV
     const headers = Object.keys(csvData[0] || {});
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+      ...csvData.map(row =>
+        headers.map(header => `"${row[header] || ''}"`).join(',')
+      ),
     ].join('\n');
 
     const filename = `exam-reports-${new Date().toISOString().split('T')[0]}.csv`;

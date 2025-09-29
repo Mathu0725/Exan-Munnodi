@@ -13,6 +13,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  // Only run Playwright specs; ignore Jest tests and API integration tests
+  testMatch: ['**/*.spec.ts'],
+  testIgnore: ['**/api/**', '**/*.test.*'],
   projects: [
     {
       name: 'chromium',

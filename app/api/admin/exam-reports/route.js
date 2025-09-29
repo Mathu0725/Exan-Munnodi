@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
   try {
@@ -13,8 +13,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'e933e3c8e4e4a7b4a2e5d1f8a7c6b3e2a1d0c9f8b7e6a5d4c3b2a1f0e9d8c7b6');
-    
+    const decoded = verifyAccessToken(token);
+
     if (!['Admin', 'Content Editor'].includes(decoded.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -29,11 +29,11 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     const where = {};
-    
+
     if (examId) {
       where.examId = parseInt(examId);
     }
-    
+
     if (startDate || endDate) {
       where.submittedAt = {};
       if (startDate) {
@@ -43,7 +43,7 @@ export async function GET(request) {
         where.submittedAt.lte = new Date(endDate);
       }
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -74,7 +74,7 @@ export async function GET(request) {
 
     // Apply score filters after fetching (since we need to calculate percentage)
     let filteredResults = results;
-    
+
     if (minScore || maxScore) {
       filteredResults = results.filter(result => {
         const percentage = (result.score / result.totalMarks) * 100;

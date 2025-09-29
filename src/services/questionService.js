@@ -70,7 +70,7 @@ const getQuestionsFromStorage = () => {
   return questions ? JSON.parse(questions) : initialQuestions;
 };
 
-const saveQuestionsToStorage = (questions) => {
+const saveQuestionsToStorage = questions => {
   localStorage.setItem('questions', JSON.stringify(questions));
 };
 
@@ -80,21 +80,27 @@ const getVersionsFromStorage = () => {
   return raw ? JSON.parse(raw) : {};
 };
 
-const saveVersionsToStorage = (versions) => {
+const saveVersionsToStorage = versions => {
   localStorage.setItem('questionVersions', JSON.stringify(versions));
 };
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export const questionService = {
   async getQuestions({ page = 1, limit = 10, search = '', filters = {} }) {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (search) params.set('search', search);
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') params.set(key, String(value));
+      if (value !== undefined && value !== null && value !== '')
+        params.set(key, String(value));
     });
 
-    const res = await fetch(`/api/questions?${params.toString()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/questions?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch questions');
     return res.json();
   },
@@ -146,7 +152,9 @@ export const questionService = {
     }
 
     if (errors.length > 0) {
-      throw new Error(`Failed to create ${errors.length} out of ${questions.length} questions. First error: ${errors[0].error}`);
+      throw new Error(
+        `Failed to create ${errors.length} out of ${questions.length} questions. First error: ${errors[0].error}`
+      );
     }
 
     return { success: true, created: results.length, data: results };
@@ -167,7 +175,9 @@ export const questionService = {
     }
 
     if (errors.length > 0) {
-      throw new Error(`Failed to delete ${errors.length} out of ${ids.length} questions. First error: ${errors[0].error}`);
+      throw new Error(
+        `Failed to delete ${errors.length} out of ${ids.length} questions. First error: ${errors[0].error}`
+      );
     }
 
     return { success: true, deleted: results.length, data: results };
@@ -185,10 +195,10 @@ export const questionService = {
           snapshot: {
             title: 'Original version',
             difficulty: 1,
-            marks: 1
-          }
-        }
-      ]
+            marks: 1,
+          },
+        },
+      ],
     };
   },
 };

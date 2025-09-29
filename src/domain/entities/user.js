@@ -51,4 +51,3 @@ export function createUserUpdateRequest(props) {
     updatedAt: props.updatedAt ?? props.updated_at ?? null,
   };
 }
-

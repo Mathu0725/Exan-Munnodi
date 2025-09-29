@@ -1,6 +1,6 @@
 // Mock notification service - stores notifications in localStorage and logs to console
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const getNotifications = () => {
   if (typeof window === 'undefined') return [];
@@ -8,7 +8,7 @@ const getNotifications = () => {
   return raw ? JSON.parse(raw) : [];
 };
 
-const saveNotifications = (items) => {
+const saveNotifications = items => {
   localStorage.setItem('notifications', JSON.stringify(items));
 };
 
@@ -19,17 +19,19 @@ export const notificationService = {
       const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          to: recipients, 
-          subject, 
+        body: JSON.stringify({
+          to: recipients,
+          subject,
           text: message,
-          html: html || `<pre>${message}</pre>`
+          html: html || `<pre>${message}</pre>`,
         }),
       });
       if (res.ok) {
         return await res.json();
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
 
     await delay(200);
     const items = getNotifications();
@@ -45,10 +47,17 @@ export const notificationService = {
     items.push(entry);
     saveNotifications(items);
     try {
-      console.log('[Notification] To:', recipients.join(','), '\nSubject:', subject, '\nMessage:', message);
-    } catch {}
+      console.log(
+        '[Notification] To:',
+        recipients.join(','),
+        '\nSubject:',
+        subject,
+        '\nMessage:',
+        message
+      );
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
     return entry;
   },
 };
-
-

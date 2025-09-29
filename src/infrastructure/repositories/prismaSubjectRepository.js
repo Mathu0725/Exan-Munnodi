@@ -3,6 +3,24 @@ import { SubjectRepository } from '@/domain/repositories/SubjectRepository';
 import { createSubject, createSubSubject } from '@/domain/entities/subject';
 
 export class PrismaSubjectRepository extends SubjectRepository {
+  async generateUniqueSlug(base) {
+    const normalized = (base || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    const baseSlug = normalized || `subject-${Date.now()}`;
+
+    const existing = await prisma.subject.findMany({
+      where: { slug: { startsWith: baseSlug } },
+      select: { slug: true },
+    });
+    const slugs = new Set(existing.map(r => r.slug));
+    if (!slugs.has(baseSlug)) return baseSlug;
+    let i = 2;
+    while (slugs.has(`${baseSlug}-${i}`)) i += 1;
+    return `${baseSlug}-${i}`;
+  }
   async list() {
     const subjects = await prisma.subject.findMany({
       orderBy: { order: 'asc' },
@@ -28,15 +46,20 @@ export class PrismaSubjectRepository extends SubjectRepository {
   }
 
   async save(subjectEntity) {
+    const desiredSlug = subjectEntity.slug ?? subjectEntity.name;
+    const uniqueSlug = await this.generateUniqueSlug(desiredSlug);
     const data = {
       name: subjectEntity.name,
-      slug: subjectEntity.slug ?? subjectEntity.name.toLowerCase().replace(/\s+/g, '-'),
+      slug: uniqueSlug,
       order: subjectEntity.order ?? 0,
       active: subjectEntity.active ?? true,
     };
 
     if (!subjectEntity.id) {
-      const created = await prisma.subject.create({ data, include: { subsubjects: true } });
+      const created = await prisma.subject.create({
+        data,
+        include: { subsubjects: true },
+      });
       return createSubject(created);
     }
 
@@ -55,7 +78,9 @@ export class PrismaSubjectRepository extends SubjectRepository {
   async saveSubSubject(subSubjectEntity) {
     const data = {
       name: subSubjectEntity.name,
-      slug: subSubjectEntity.slug ?? subSubjectEntity.name.toLowerCase().replace(/\s+/g, '-'),
+      slug:
+        subSubjectEntity.slug ??
+        subSubjectEntity.name.toLowerCase().replace(/\s+/g, '-'),
       order: subSubjectEntity.order ?? 0,
       subjectId: Number(subSubjectEntity.subjectId),
     };
@@ -77,8 +102,9 @@ export class PrismaSubjectRepository extends SubjectRepository {
   }
 
   async findSubSubjectById(id) {
-    const record = await prisma.subSubject.findUnique({ where: { id: Number(id) } });
+    const record = await prisma.subSubject.findUnique({
+      where: { id: Number(id) },
+    });
     return createSubSubject(record);
   }
 }
-

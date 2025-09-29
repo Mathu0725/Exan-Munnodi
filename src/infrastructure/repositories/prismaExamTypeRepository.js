@@ -19,7 +19,9 @@ export class PrismaExamTypeRepository extends ExamTypeRepository {
   }
 
   async findById(id) {
-    const examType = await prisma.examType.findUnique({ where: { id: Number(id) } });
+    const examType = await prisma.examType.findUnique({
+      where: { id: Number(id) },
+    });
     return examType ? createExamType(examType) : null;
   }
 
@@ -52,4 +54,3 @@ export class PrismaExamTypeRepository extends ExamTypeRepository {
     await prisma.examType.delete({ where: { id: Number(id) } });
   }
 }
-

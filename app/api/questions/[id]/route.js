@@ -11,7 +11,10 @@ export async function GET(_request, { params }) {
   try {
     const question = await questionRepository.findById(params.id);
     if (!question) {
-      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Question not found' },
+        { status: 404 }
+      );
     }
     return NextResponse.json(question);
   } catch (error) {
@@ -24,7 +27,10 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
     const existing = await questionRepository.findById(params.id);
     if (!existing) {
-      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Question not found' },
+        { status: 404 }
+      );
     }
 
     const updated = await updateQuestion.execute({

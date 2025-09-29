@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { 
+const ReactQuill = dynamic(() => import('react-quill'), {
   ssr: false,
-  loading: () => <div className="h-32 bg-gray-100 dark:bg-gray-700 rounded animate-pulse"></div>
+  loading: () => (
+    <div className='h-32 bg-gray-100 dark:bg-gray-700 rounded animate-pulse'></div>
+  ),
 });
 
 import 'react-quill/dist/quill.snow.css';
@@ -36,9 +38,9 @@ export default function LatexQuillEditor(props) {
   const modules = {
     toolbar: {
       container: [
-        [{ 'header': [1, 2, 3, false] }],
+        [{ header: [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
         ['link', 'image', 'formula'], // Add formula button
         ['clean'],
       ],
@@ -50,9 +52,15 @@ export default function LatexQuillEditor(props) {
 
   const formats = [
     'header',
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet',
-    'link', 'image',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'blockquote',
+    'list',
+    'bullet',
+    'link',
+    'image',
     'formula', // Add formula format
   ];
 
@@ -60,7 +68,7 @@ export default function LatexQuillEditor(props) {
   useEffect(() => {
     if (isClient && typeof window !== 'undefined') {
       const { Quill } = require('react-quill');
-      
+
       // Register the custom formula blot
       const FormulaBlot = Quill.import('blots/embed');
       class KatexFormula extends FormulaBlot {
@@ -90,7 +98,8 @@ export default function LatexQuillEditor(props) {
         const editor = quillRef.current.getEditor();
         const quillContainer = editor.container;
         if (quillContainer) {
-          quillContainer.style.fontFamily = "'Noto Sans Tamil', system-ui, sans-serif";
+          quillContainer.style.fontFamily =
+            "'Noto Sans Tamil', system-ui, sans-serif";
           quillContainer.classList.add('tamil-support');
         }
       }
@@ -98,14 +107,16 @@ export default function LatexQuillEditor(props) {
   }, [isClient]);
 
   if (!isClient) {
-    return <div className="h-32 bg-gray-100 dark:bg-gray-700 rounded animate-pulse"></div>;
+    return (
+      <div className='h-32 bg-gray-100 dark:bg-gray-700 rounded animate-pulse'></div>
+    );
   }
 
   return (
-    <div className="tamil-support">
+    <div className='tamil-support'>
       <ReactQuill
         ref={quillRef}
-        theme="snow"
+        theme='snow'
         modules={modules}
         formats={formats}
         {...props}

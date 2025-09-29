@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-const sanitizeUser = (user) => {
+const sanitizeUser = user => {
   if (!user) return null;
   const { password, ...safe } = user;
   return safe;
@@ -14,7 +14,10 @@ export async function GET(request) {
     const email = searchParams.get('email');
 
     if (!id && !email) {
-      return NextResponse.json({ success: false, message: 'id or email query parameter required.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'id or email query parameter required.' },
+        { status: 400 }
+      );
     }
 
     const user = await prisma.user.findFirst({
@@ -39,6 +42,9 @@ export async function GET(request) {
     return NextResponse.json({ success: true, data: sanitizeUser(user) });
   } catch (error) {
     console.error('User info error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to fetch user.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch user.' },
+      { status: 500 }
+    );
   }
 }

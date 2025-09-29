@@ -19,4 +19,3 @@ export class UserRepository {
     throw new Error('Method not implemented');
   }
 }
-

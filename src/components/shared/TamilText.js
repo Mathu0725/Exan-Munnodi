@@ -6,12 +6,12 @@ import { useMemo } from 'react';
  * TamilText component for proper Tamil text rendering
  * Supports search highlighting and proper font rendering
  */
-export default function TamilText({ 
-  children, 
-  className = '', 
-  searchTerm = '', 
+export default function TamilText({
+  children,
+  className = '',
+  searchTerm = '',
   highlight = false,
-  type = 'body' // 'heading', 'body', 'question', 'option'
+  type = 'body', // 'heading', 'body', 'question', 'option'
 }) {
   const processedText = useMemo(() => {
     if (!searchTerm || !highlight) {
@@ -19,10 +19,16 @@ export default function TamilText({
     }
 
     // Create regex for case-insensitive search
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    
+    const regex = new RegExp(
+      `(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+      'gi'
+    );
+
     // Replace matches with highlighted version
-    return children.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
+    return children.replace(
+      regex,
+      '<mark class="bg-yellow-200 px-1 rounded">$1</mark>'
+    );
   }, [children, searchTerm, highlight]);
 
   const getTamilClass = () => {
@@ -42,25 +48,21 @@ export default function TamilText({
 
   if (searchTerm && highlight) {
     return (
-      <span 
+      <span
         className={`${getTamilClass()} ${className}`}
         dangerouslySetInnerHTML={{ __html: processedText }}
       />
     );
   }
 
-  return (
-    <span className={`${getTamilClass()} ${className}`}>
-      {children}
-    </span>
-  );
+  return <span className={`${getTamilClass()} ${className}`}>{children}</span>;
 }
 
 /**
  * Hook for Tamil text utilities
  */
 export const useTamilText = () => {
-  const isTamilText = (text) => {
+  const isTamilText = text => {
     // Check if text contains Tamil characters
     const tamilRegex = /[\u0B80-\u0BFF]/;
     return tamilRegex.test(text);
@@ -83,6 +85,6 @@ export const useTamilText = () => {
 
   return {
     isTamilText,
-    getTamilFontClass
+    getTamilFontClass,
   };
 };

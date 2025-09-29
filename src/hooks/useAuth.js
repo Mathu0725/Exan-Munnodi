@@ -9,26 +9,26 @@ import {
   useState,
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { authApi } from '@/lib/api/apiClient';
+import { sessionManager } from '@/lib/session/sessionManager';
 
-const AUTH_ROUTES = ['/login', '/login-3d', '/register', '/forgot-password', '/forgot-password-3d', '/reset-password', '/reset-with-otp'];
+const AUTH_ROUTES = [
+  '/login',
+  '/login-3d',
+  '/register',
+  '/forgot-password',
+  '/forgot-password-3d',
+  '/reset-password',
+  '/reset-with-otp',
+];
 const AuthContext = createContext(undefined);
 
-const isAuthRoute = (pathname) => {
+const isAuthRoute = pathname => {
   if (!pathname) return false;
-  return AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  return AUTH_ROUTES.some(route => pathname.startsWith(route));
 };
 
-async function requestJson(url, options = {}) {
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.message || 'API request failed');
-  }
-  return data;
-}
+// Remove the old requestJson function as we're using the new API client
 
 export function AuthProvider({ children }) {
   const router = useRouter();
@@ -39,10 +39,19 @@ export function AuthProvider({ children }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const { data } = await requestJson('/api/auth/me');
-      setUser(data || null);
+      const response = await authApi.me();
+      const userData = response.data || response;
+      setUser(userData || null);
+
+      // Update session manager
+      if (userData) {
+        sessionManager.setUser(userData);
+        sessionManager.updateTimestamp();
+      }
     } catch (error) {
+      console.error('Failed to refresh user:', error);
       setUser(null);
+      sessionManager.clearSession();
     } finally {
       setLoading(false);
     }
@@ -67,15 +76,25 @@ export function AuthProvider({ children }) {
     async ({ email, password }) => {
       setAuthLoading(true);
       try {
-        const payload = await requestJson('/api/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password }),
-        });
-        if (payload.success) {
+        const response = await authApi.login({ email, password });
+
+        if (response.success) {
+          // Store tokens if provided
+          if (response.data?.accessToken) {
+            sessionManager.setTokens(
+              response.data.accessToken,
+              response.data.refreshToken
+            );
+          }
+
           await refreshUser();
           router.replace('/');
         }
-        return payload;
+
+        return response;
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
       } finally {
         setAuthLoading(false);
       }
@@ -83,22 +102,35 @@ export function AuthProvider({ children }) {
     [router, refreshUser]
   );
 
-  const logout = useCallback(async () => {
-    try {
-      await requestJson('/api/auth/logout', { method: 'POST' });
-    } finally {
-      setUser(null);
-      router.replace('/login');
-    }
-  }, [router]);
+  const logout = useCallback(
+    async (showMessage = true) => {
+      try {
+        await authApi.logout();
+        if (showMessage) {
+          // Show success message if notifications are available
+          if (typeof window !== 'undefined' && window.showToast) {
+            window.showToast('success', 'Logged out successfully');
+          }
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Still clear user state even if logout request fails
+      } finally {
+        setUser(null);
+        sessionManager.clearSession();
+        router.replace('/login');
+      }
+    },
+    [router]
+  );
 
-  const registerUser = useCallback(async (data) => {
+  const registerUser = useCallback(async data => {
     setAuthLoading(true);
     try {
-      return await requestJson('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return await authApi.register(data);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
     } finally {
       setAuthLoading(false);
     }
@@ -107,10 +139,10 @@ export function AuthProvider({ children }) {
   const requestPasswordReset = useCallback(async ({ email }) => {
     setAuthLoading(true);
     try {
-      return await requestJson('/api/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
+      return await authApi.forgotPassword(email);
+    } catch (error) {
+      console.error('Password reset request failed:', error);
+      throw error;
     } finally {
       setAuthLoading(false);
     }
@@ -119,10 +151,10 @@ export function AuthProvider({ children }) {
   const resetPassword = useCallback(async ({ token, password, otp }) => {
     setAuthLoading(true);
     try {
-      return await requestJson('/api/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ token, password, otp }),
-      });
+      return await authApi.resetPassword({ token, password, otp });
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      throw error;
     } finally {
       setAuthLoading(false);
     }
@@ -140,12 +172,22 @@ export function AuthProvider({ children }) {
       resetPassword,
       refreshUser,
     }),
-    [user, loading, authLoading, login, logout, registerUser, requestPasswordReset, resetPassword, refreshUser]
+    [
+      user,
+      loading,
+      authLoading,
+      login,
+      logout,
+      registerUser,
+      requestPasswordReset,
+      resetPassword,
+      refreshUser,
+    ]
   );
 
   if (loading && !isAuthRoute(pathname)) {
     return (
-      <div className="w-screen h-screen flex items-center justify-center text-sm text-gray-600">
+      <div className='w-screen h-screen flex items-center justify-center text-sm text-gray-600'>
         Checking authentication...
       </div>
     );

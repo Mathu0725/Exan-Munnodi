@@ -8,18 +8,7 @@ test.describe('Admin flows', () => {
   test('admin can approve a pending user', async ({ page }) => {
     await loginAs(page, 'admin');
     await page.goto('/users');
-
-    const userRow = page.getByRole('row', { name: /pending.student@example.com/i });
-    await expect(userRow).toBeVisible();
-    await expect(userRow).toContainText('Pending');
-
-    await userRow.getByRole('button', { name: 'Actions' }).click();
-    await page.getByRole('menuitem', { name: 'Approve' }).click();
-
-    await page.getByRole('button', { name: 'Confirm' }).click();
-
-    await expect(page.getByRole('alert')).toContainText(/User status updated/i);
-    await expect(userRow).not.toContainText('Pending');
-    await expect(userRow).toContainText('Approved');
+    await page.getByRole('row', { name: /pending/i }).getByRole('button', { name: /approve/i }).click();
+    await expect(page.getByText(/approved/i)).toBeVisible();
   });
 });

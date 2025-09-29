@@ -15,4 +15,3 @@ export class ExamTypeRepository {
     throw new Error('Method not implemented');
   }
 }
-

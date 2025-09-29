@@ -11,14 +11,18 @@ export class PrismaCategoryRepository extends CategoryRepository {
   }
 
   async findById(id) {
-    const category = await prisma.category.findUnique({ where: { id: Number(id) } });
+    const category = await prisma.category.findUnique({
+      where: { id: Number(id) },
+    });
     return createCategory(category);
   }
 
   async save(categoryEntity) {
     const data = {
       name: categoryEntity.name,
-      slug: categoryEntity.slug ?? categoryEntity.name.toLowerCase().replace(/\s+/g, '-'),
+      slug:
+        categoryEntity.slug ??
+        categoryEntity.name.toLowerCase().replace(/\s+/g, '-'),
       order: categoryEntity.order ?? 0,
       active: categoryEntity.active ?? true,
     };
@@ -28,7 +32,10 @@ export class PrismaCategoryRepository extends CategoryRepository {
       return createCategory(created);
     }
 
-    const updated = await prisma.category.update({ where: { id: Number(categoryEntity.id) }, data });
+    const updated = await prisma.category.update({
+      where: { id: Number(categoryEntity.id) },
+      data,
+    });
     return createCategory(updated);
   }
 
@@ -36,4 +43,3 @@ export class PrismaCategoryRepository extends CategoryRepository {
     await prisma.category.delete({ where: { id: Number(id) } });
   }
 }
-

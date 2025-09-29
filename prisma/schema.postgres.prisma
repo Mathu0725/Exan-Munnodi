@@ -1,0 +1,309 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String    @unique
+  password      String
+  phone         String?
+  institution   String?
+  avatarUrl     String?
+  role          String    @default("Student")
+  status        String    @default("Pending")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  approvedById   Int?
+  approvedBy     User?    @relation("UserApprovals", fields: [approvedById], references: [id])
+  approvedUsers  User[]   @relation("UserApprovals")
+
+  updateRequests   UserUpdateRequest[]
+  reviewedRequests UserUpdateRequest[] @relation("UserUpdateReview")
+
+  passwordResetTokens PasswordResetToken[]
+  profile             UserProfile?
+
+  // Student Group Relations
+  groupMemberships    StudentGroupMember[]
+  createdGroups       StudentGroup[]
+  notifications       Notification[]
+  refreshTokens       RefreshToken[]
+
+  @@index([status, role, createdAt])
+  @@index([name])
+}
+
+model UserUpdateRequest {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  changes      String
+  status       String   @default("Pending")
+  comment      String?
+  createdAt    DateTime @default(now())
+  reviewedAt   DateTime?
+  reviewedById Int?
+  reviewedBy   User?    @relation("UserUpdateReview", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([reviewedById])
+  @@index([createdAt])
+}
+
+model UserProfile {
+  id         Int     @id @default(autoincrement())
+  userId     Int     @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarUrl  String?
+  bio        String?
+  address    String?
+  city       String?
+  state      String?
+  country    String?
+  postalCode String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Exam {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String?
+  status          String   @default("draft")
+  examTypeId      Int?
+  startAt         DateTime?
+  endAt           DateTime?
+  questions       String?
+  config          String?
+  isScheduled     Boolean  @default(false)
+  scheduledAt     DateTime?
+  rescheduledAt   DateTime?
+  rescheduleReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  examType    ExamType? @relation(fields: [examTypeId], references: [id])
+
+  // Student Group Relations
+  examGroups  ExamGroup[]
+  notifications Notification[]
+
+  @@index([status, examTypeId, createdAt])
+  @@index([title])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+  otp       String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Question {
+  id            Int       @id @default(autoincrement())
+  title         String
+  body          String
+  subjectId     Int
+  subSubjectId  Int?
+  categoryId    Int
+  difficulty    Int        @default(1)
+  marks         Int        @default(1)
+  negativeMarks Int        @default(0)
+  status        String     @default("draft")
+  tags          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  options       Option[]
+  category      Category  @relation(fields: [categoryId], references: [id])
+
+  @@index([subjectId, subSubjectId, categoryId])
+  @@index([difficulty])
+  @@index([createdAt])
+  @@index([title])
+  @@index([status])
+}
+
+model Option {
+  id         Int      @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId Int
+
+  @@index([questionId])
+}
+
+model Subject {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  order     Int       @default(0)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  subsubjects SubSubject[]
+
+  @@index([active])
+  @@index([order])
+}
+
+model SubSubject {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  subjectId Int
+
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  order     Int       @default(0)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  questions Question[]
+
+  @@index([active])
+  @@index([order])
+}
+
+model ExamType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exams     Exam[]
+
+  @@index([active])
+  @@index([order])
+}
+
+model StudentGroup {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  color       String?  @default("#3B82F6")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members     StudentGroupMember[]
+  examGroups  ExamGroup[]
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById Int
+  notifications Notification[]
+
+  @@index([isActive])
+  @@index([createdById])
+}
+
+model StudentGroupMember {
+  id       Int         @id @default(autoincrement())
+  userId   Int
+  groupId  Int
+  joinedAt DateTime  @default(now())
+
+  // Relations
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model ExamGroup {
+  id      Int @id @default(autoincrement())
+  examId  Int
+  groupId Int
+
+  // Relations
+  exam    Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, groupId])
+  @@index([examId])
+  @@index([groupId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  userId    Int?
+  groupId   Int?
+  examId    Int?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     StudentGroup?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  exam      Exam?          @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([groupId])
+  @@index([examId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id              Int      @id @default(autoincrement())
+  tokenHash       String   @unique
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  revokedAt       DateTime?
+  replacedByToken String?
+  device          String?
+  ipAddress       String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  email     String
+  ipAddress String?
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userAgent String?
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+}
+
+

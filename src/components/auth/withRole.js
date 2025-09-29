@@ -8,7 +8,11 @@ const withRole = (Component, allowedRoles) => {
     const { user, loading } = useAuth();
 
     if (loading) {
-      return <div className="w-screen h-screen flex items-center justify-center">Loading authentication...</div>;
+      return (
+        <div className='w-screen h-screen flex items-center justify-center'>
+          Loading authentication...
+        </div>
+      );
     }
 
     // If user is not logged in, AuthProvider should handle redirect to /login

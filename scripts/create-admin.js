@@ -34,12 +34,12 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('Create admin error:', e);
     process.exit(1);
   })
   .finally(async () => {
-    try { await prisma.$disconnect(); } catch {}
+    try {
+      await prisma.$disconnect();
+    } catch {}
   });
-
-

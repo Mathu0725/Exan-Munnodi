@@ -7,4 +7,3 @@ export class UserProfileRepository {
     throw new Error('Method not implemented');
   }
 }
-

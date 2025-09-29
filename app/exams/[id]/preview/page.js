@@ -28,14 +28,19 @@ export default function ExamPreviewPage() {
   }, [params?.id]);
 
   return (
-    <PageWrapper title="Exam Preview">
+    <PageWrapper title='Exam Preview'>
       {loading && <div>Loading...</div>}
-      {error && <div className="text-red-600">{error}</div>}
+      {error && <div className='text-red-600'>{error}</div>}
       {exam && (
-        <div className="bg-white rounded shadow overflow-hidden">
-          <div className="p-4 border-b flex justify-between items-center">
-            <div className="font-semibold">{exam.title}</div>
-            <button onClick={() => router.back()} className="px-3 py-1 bg-gray-200 rounded">Back</button>
+        <div className='bg-white rounded shadow overflow-hidden'>
+          <div className='p-4 border-b flex justify-between items-center'>
+            <div className='font-semibold'>{exam.title}</div>
+            <button
+              onClick={() => router.back()}
+              className='px-3 py-1 bg-gray-200 rounded'
+            >
+              Back
+            </button>
           </div>
           <ExamPreview examData={exam} />
         </div>
@@ -43,5 +48,3 @@ export default function ExamPreviewPage() {
     </PageWrapper>
   );
 }
-
-

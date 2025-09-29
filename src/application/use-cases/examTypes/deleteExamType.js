@@ -9,4 +9,3 @@ export class DeleteExamTypeUseCase {
     return { success: true };
   }
 }
-

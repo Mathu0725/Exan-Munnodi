@@ -1,0 +1,6 @@
+{"critical":true,"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mRegistered shutdown handler: database\u001b[39m","priority":100,"timeout":5000,"timestamp":"2025-09-29 14:27:24:2724"}
+{"critical":false,"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mRegistered shutdown handler: logger\u001b[39m","priority":10,"timeout":5000,"timestamp":"2025-09-29 14:27:24:2724"}
+{"forceExit":true,"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mGraceful shutdown system initialized\u001b[39m","timeout":30000,"timestamp":"2025-09-29 14:27:24:2724"}
+{"arch":"x64","level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mApplication startup initialized\u001b[39m","nodeVersion":"v22.18.0","pid":7832,"platform":"win32","timestamp":"2025-09-29 14:27:24:2724"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mApplication startup completed successfully\u001b[39m","timestamp":"2025-09-29 14:27:24:2724"}
+{"code":1,"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mProcess exiting\u001b[39m","timestamp":"2025-09-29 14:27:24:2724"}

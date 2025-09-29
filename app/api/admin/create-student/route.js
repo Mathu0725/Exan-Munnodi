@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
 
 export async function POST(request) {
@@ -14,22 +14,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'e933e3c8e4e4a7b4a2e5d1f8a7c6b3e2a1d0c9f8b7e6a5d4c3b2a1f0e9d8c7b6');
-    
+    const decoded = verifyAccessToken(token);
+
     // Only Super Admin and Admin can create students
     if (!['Super Admin', 'Admin'].includes(decoded.role)) {
-      return NextResponse.json({ error: 'Unauthorized. Only Super Admin and Admin can create students.' }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            'Unauthorized. Only Super Admin and Admin can create students.',
+        },
+        { status: 403 }
+      );
     }
 
-    const { name, email, password, institution, phone, studentId, grade, department } = await request.json();
+    const {
+      name,
+      email,
+      password,
+      institution,
+      phone,
+      studentId,
+      grade,
+      department,
+    } = await request.json();
 
     // Validation
     if (!name || !email || !password) {
-      return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Name, email, and password are required.' },
+        { status: 400 }
+      );
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long.' },
+        { status: 400 }
+      );
     }
 
     // Check if email already exists
@@ -38,7 +59,10 @@ export async function POST(request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: 'A user with this email already exists.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'A user with this email already exists.' },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -89,9 +113,9 @@ export async function POST(request) {
     const admins = await prisma.user.findMany({
       where: {
         role: { in: ['Admin', 'Super Admin'] },
-        status: 'Active'
+        status: 'Active',
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     for (const admin of admins) {
@@ -105,14 +129,19 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Student created successfully. Account is pending approval.',
-      student: newStudent,
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Student created successfully. Account is pending approval.',
+        student: newStudent,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Create student error:', error);
-    return NextResponse.json({ error: 'Failed to create student.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create student.' },
+      { status: 500 }
+    );
   }
 }

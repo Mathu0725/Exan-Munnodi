@@ -8,8 +8,14 @@ function normalize(record) {
     startAt: record.startAt,
     endAt: record.endAt,
     // questions/config stored as JSON/text in DB
-    questions: typeof record.questions === 'string' ? JSON.parse(record.questions || '[]') : (record.questions || []),
-    config: typeof record.config === 'string' ? JSON.parse(record.config || '{}') : (record.config || {}),
+    questions:
+      typeof record.questions === 'string'
+        ? JSON.parse(record.questions || '[]')
+        : record.questions || [],
+    config:
+      typeof record.config === 'string'
+        ? JSON.parse(record.config || '{}')
+        : record.config || {},
   });
 }
 
@@ -22,10 +28,14 @@ export class PrismaExamRepository {
   async search(filter = {}) {
     const where = {};
     if (filter.status) where.status = filter.status;
-    if (filter.query) where.title = { contains: filter.query, mode: 'insensitive' };
+    if (filter.query)
+      where.title = { contains: filter.query, mode: 'insensitive' };
     if (filter.examTypeId) where.examTypeId = Number(filter.examTypeId);
 
-    const rows = await prisma.exam.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const rows = await prisma.exam.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
     return rows.map(normalize);
   }
 
@@ -37,8 +47,13 @@ export class PrismaExamRepository {
       examTypeId: examEntity.examTypeId ?? null,
       startAt: examEntity.startAt,
       endAt: examEntity.endAt,
-      questions: Array.isArray(examEntity.questions) ? JSON.stringify(examEntity.questions) : (examEntity.questions ?? '[]'),
-      config: typeof examEntity.config === 'object' ? JSON.stringify(examEntity.config) : (examEntity.config ?? '{}'),
+      questions: Array.isArray(examEntity.questions)
+        ? JSON.stringify(examEntity.questions)
+        : (examEntity.questions ?? '[]'),
+      config:
+        typeof examEntity.config === 'object'
+          ? JSON.stringify(examEntity.config)
+          : (examEntity.config ?? '{}'),
     };
 
     if (!examEntity.id) {
@@ -46,7 +61,10 @@ export class PrismaExamRepository {
       return normalize(created);
     }
 
-    const updated = await prisma.exam.update({ where: { id: Number(examEntity.id) }, data });
+    const updated = await prisma.exam.update({
+      where: { id: Number(examEntity.id) },
+      data,
+    });
     return normalize(updated);
   }
 
@@ -54,5 +72,3 @@ export class PrismaExamRepository {
     await prisma.exam.delete({ where: { id: Number(id) } });
   }
 }
-
-

@@ -20,4 +20,3 @@ export class UpdateSubjectUseCase {
     return this.subjectRepository.save(subjectEntity);
   }
 }
-

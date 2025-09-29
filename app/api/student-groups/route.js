@@ -80,7 +80,10 @@ export async function POST(request) {
     const { name, description, color, memberIds = [] } = body;
 
     if (!name) {
-      return NextResponse.json({ error: 'Group name is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Group name is required' },
+        { status: 400 }
+      );
     }
 
     // For now, we'll use a default createdById (you can get this from auth later)

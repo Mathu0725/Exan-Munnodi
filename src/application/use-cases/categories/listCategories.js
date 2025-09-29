@@ -10,4 +10,3 @@ export class ListCategoriesUseCase {
     return categories.map(createCategory);
   }
 }
-

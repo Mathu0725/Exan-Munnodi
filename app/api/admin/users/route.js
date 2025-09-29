@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { emailService } from '@/services/emailService';
 
-const sanitizeUser = (user) => {
+const sanitizeUser = user => {
   if (!user) return null;
   const { password, ...rest } = user;
   return {
@@ -39,21 +39,41 @@ export async function GET(request) {
     return NextResponse.json({ success: true, data: users.map(sanitizeUser) });
   } catch (error) {
     console.error('Admin users GET error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to fetch users.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch users.' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request) {
   try {
-    const { name, email, password, role = 'Student', status = 'Pending', phone, institution, approvedById } = await request.json();
+    const {
+      name,
+      email,
+      password,
+      role = 'Student',
+      status = 'Pending',
+      phone,
+      institution,
+      approvedById,
+    } = await request.json();
 
     if (!name || !email || !password) {
-      return NextResponse.json({ success: false, message: 'Name, email, and password are required.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Name, email, and password are required.' },
+        { status: 400 }
+      );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const existing = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
     if (existing) {
-      return NextResponse.json({ success: false, message: 'Email already registered.' }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: 'Email already registered.' },
+        { status: 409 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -75,10 +95,16 @@ export async function POST(request) {
       },
     });
 
-    return NextResponse.json({ success: true, data: sanitizeUser(user) }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: sanitizeUser(user) },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Admin users POST error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to create user.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to create user.' },
+      { status: 500 }
+    );
   }
 }
 
@@ -87,7 +113,10 @@ export async function PATCH(request) {
     const { id, status, role, approvedById } = await request.json();
 
     if (!id) {
-      return NextResponse.json({ success: false, message: 'User id is required.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'User id is required.' },
+        { status: 400 }
+      );
     }
 
     const data = {};
@@ -96,7 +125,9 @@ export async function PATCH(request) {
       data.status = status;
       if (['Approved', 'Active'].includes(status)) {
         data.approvedById = approvedById ? Number(approvedById) : null;
-      } else if (['Pending', 'Inactive', 'Rejected', 'Suspended'].includes(status)) {
+      } else if (
+        ['Pending', 'Inactive', 'Rejected', 'Suspended'].includes(status)
+      ) {
         data.approvedById = null;
       }
     }
@@ -122,7 +153,7 @@ export async function PATCH(request) {
           sanitized.email,
           sanitized.name,
           status,
-          sanitized.approvedBy?.name || 'Administrator',
+          sanitized.approvedBy?.name || 'Administrator'
         );
       } catch (emailError) {
         console.error('User status email failed:', emailError.message);
@@ -132,6 +163,9 @@ export async function PATCH(request) {
     return NextResponse.json({ success: true, data: sanitized });
   } catch (error) {
     console.error('Admin users PATCH error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to update user.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to update user.' },
+      { status: 500 }
+    );
   }
 }

@@ -13,10 +13,10 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900">
-      <div className="text-center text-white">
-        <FaSpinner className="animate-spin text-4xl mx-auto mb-4" />
-        <p className="text-lg">Redirecting to 3D Login...</p>
+    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900'>
+      <div className='text-center text-white'>
+        <FaSpinner className='animate-spin text-4xl mx-auto mb-4' />
+        <p className='text-lg'>Redirecting to 3D Login...</p>
       </div>
     </div>
   );

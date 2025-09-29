@@ -31,4 +31,3 @@ export class SubjectRepository {
     throw new Error('Method not implemented');
   }
 }
-

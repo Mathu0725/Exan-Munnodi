@@ -9,4 +9,3 @@ export function createCategory(props) {
     updatedAt: props.updatedAt ?? props.updated_at ?? null,
   };
 }
-
