@@ -15,7 +15,10 @@ export function ThemeProvider({ children }) {
       setTheme(savedTheme);
     } else {
       // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light';
       setTheme(systemTheme);
     }
     setMounted(true);
@@ -31,7 +34,7 @@ export function ThemeProvider({ children }) {
   }, [theme, mounted]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const value = {
@@ -39,13 +42,11 @@ export function ThemeProvider({ children }) {
     toggleTheme,
     isDark: theme === 'dark',
     isLight: theme === 'light',
-    mounted
+    mounted,
   };
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 }
 

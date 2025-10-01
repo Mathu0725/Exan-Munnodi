@@ -35,6 +35,7 @@ model User {
   groupMemberships    StudentGroupMember[]
   createdGroups       StudentGroup[]
   notifications       Notification[]
+  refreshTokens       RefreshToken[]
 
   @@index([status, role, createdAt])
   @@index([name])
@@ -291,4 +292,32 @@ model Notification {
   @@index([createdAt])
 }
 
+
+model RefreshToken {
+  id              Int      @id @default(autoincrement())
+  tokenHash       String   @unique
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  revokedAt       DateTime?
+  replacedByToken String?
+  device          String?
+  ipAddress       String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  email     String
+  ipAddress String?
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userAgent String?
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+}
 

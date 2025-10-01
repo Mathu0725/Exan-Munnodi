@@ -11,11 +11,14 @@ export async function GET(request) {
     const reviewerId = searchParams.get('reviewerId');
 
     // Optional filter to show requests for a specific reviewer (e.g., owned students)
-    let filter = {};
+    const filter = {};
     if (reviewerId) {
       const reviewer = await userRepository.findById(reviewerId);
       if (!reviewer) {
-        return NextResponse.json({ error: 'Reviewer not found' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'Reviewer not found' },
+          { status: 404 }
+        );
       }
       // Could add custom filtering based on reviewer properties if needed
     }
@@ -28,4 +31,3 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import { verifyAccessToken } from '@/lib/jwt';
+import { cookies } from 'next/headers';
 
 export async function GET(request) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN]
-    });
+    // Check authentication using JWT token
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (!authResult.success) {
-      return authResult.error;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = authResult.user;
+    const decoded = verifyAccessToken(token);
+
+    if (decoded.role !== 'Super Admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');

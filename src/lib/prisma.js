@@ -1,13 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma as optimizedPrisma } from './database/connectionPool.js';
 
-const globalForPrisma = globalThis;
+// Export the optimized Prisma client
+export const prisma = optimizedPrisma;
 
-const prisma = globalForPrisma.prisma || new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
-
+// For backward compatibility, also export as default
 export default prisma;
-
-

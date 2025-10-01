@@ -19,4 +19,3 @@ export class UpdateExamTypeUseCase {
     return this.examTypeRepository.save(examTypeEntity);
   }
 }
-

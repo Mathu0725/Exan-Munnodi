@@ -1,0 +1,303 @@
+{
+  "project": "UnicomTIC Quiz Management System",
+  "version": "0.1.0",
+  "analysis_date": "2024-12-19",
+  "total_issues": 200,
+  "critical_issues": 3,
+  "phases": [
+    {
+      "phase": "Phase 1: Critical Fixes (Immediate - 1-2 days)",
+      "priority": "CRITICAL",
+      "description": "Fix issues that prevent the application from working properly",
+      "tasks": [
+        {
+          "id": "fix-prettier-error",
+          "title": "Fix Prettier Formatting Error",
+          "description": "Add missing newline character in src/lib/logger/index.js:153",
+          "file": "src/lib/logger/index.js",
+          "line": 153,
+          "error": "Insert `⏎` prettier/prettier",
+          "status": "pending",
+          "estimated_time": "5 minutes",
+          "impact": "Build failure",
+          "solution": "Add newline after line 153"
+        },
+        {
+          "id": "fix-client-component-error",
+          "title": "Resolve Client Component Error (Digest 4206012257)",
+          "description": "Fix 'Event handlers cannot be passed to Client Component props' error affecting all pages",
+          "error": "Event handlers cannot be passed to Client Component props. <button onClick={function onClick}>",
+          "digest": "4206012257",
+          "status": "pending",
+          "estimated_time": "2-4 hours",
+          "impact": "UI completely broken - buttons not working",
+          "solution": "Find and fix the component causing server-side rendering of client components",
+          "investigation_needed": [
+            "Check global components used in layout",
+            "Verify all components have 'use client' directive",
+            "Check for hydration mismatches",
+            "Review error boundaries and providers"
+          ]
+        },
+        {
+          "id": "configure-eslint-build",
+          "title": "Configure ESLint for Build Process",
+          "description": "Change ESLint to warn instead of error during build to prevent build failures",
+          "file": "next.config.js",
+          "current": "eslint: { ignoreDuringBuilds: false }",
+          "status": "pending",
+          "estimated_time": "5 minutes",
+          "impact": "Build failure",
+          "solution": "Set ignoreDuringBuilds: true or configure specific rules"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 2: Code Quality Cleanup (Short-term - 3-5 days)",
+      "priority": "HIGH",
+      "description": "Clean up code quality issues and warnings",
+      "tasks": [
+        {
+          "id": "remove-console-statements",
+          "title": "Remove Console Statements",
+          "description": "Replace 100+ console.log statements with proper logging",
+          "count": 100,
+          "status": "pending",
+          "estimated_time": "4-6 hours",
+          "impact": "Code quality, production readiness",
+          "files_affected": [
+            "src/hooks/useAuth.js (6 instances)",
+            "src/lib/auth/tokenRefresh.js (3 instances)",
+            "src/lib/session/sessionManager.js (9 instances)",
+            "src/services/*.js (multiple files)",
+            "app/api/**/*.js (multiple files)"
+          ],
+          "solution": "Replace with winston logger or remove debug statements"
+        },
+        {
+          "id": "fix-unused-variables",
+          "title": "Fix Unused Variables and Imports",
+          "description": "Remove 50+ unused variables, imports, and parameters",
+          "count": 50,
+          "status": "pending",
+          "estimated_time": "2-3 hours",
+          "impact": "Code cleanliness, bundle size",
+          "categories": [
+            "Unused imports (FaEye, FaSpinner, etc.)",
+            "Unused variables (user, password, etc.)",
+            "Unused parameters in functions",
+            "Unused destructured variables"
+          ],
+          "solution": "Remove unused code or prefix with underscore"
+        },
+        {
+          "id": "fix-react-hooks-dependencies",
+          "title": "Fix React Hooks Dependencies",
+          "description": "Fix 10+ React Hook dependency warnings",
+          "count": 10,
+          "status": "pending",
+          "estimated_time": "2-3 hours",
+          "impact": "Potential bugs, stale closures",
+          "files_affected": [
+            "src/components/auth/RouteGuard.js",
+            "src/middleware/clientMiddleware.js",
+            "src/components/ui/Notification.js",
+            "src/components/ui/Toast.js"
+          ],
+          "solution": "Add missing dependencies or use useCallback/useMemo"
+        },
+        {
+          "id": "fix-anonymous-default-exports",
+          "title": "Fix Anonymous Default Exports",
+          "description": "Fix 3 anonymous default exports causing ESLint warnings",
+          "count": 3,
+          "status": "pending",
+          "estimated_time": "30 minutes",
+          "files_affected": [
+            "src/lib/auth/jwt.js:87",
+            "src/lib/auth/passwordReset.js:38",
+            "src/lib/auth/refreshTokens.js:30"
+          ],
+          "solution": "Assign objects to variables before exporting"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 3: Performance and Optimization (Medium-term - 1-2 weeks)",
+      "priority": "MEDIUM",
+      "description": "Optimize performance and improve user experience",
+      "tasks": [
+        {
+          "id": "optimize-images",
+          "title": "Replace img tags with Next.js Image component",
+          "description": "Replace 5+ <img> tags with Next.js <Image /> for better performance",
+          "count": 5,
+          "status": "pending",
+          "estimated_time": "1-2 hours",
+          "impact": "Performance, LCP, bandwidth",
+          "files_affected": [
+            "src/App.js",
+            "app/student-profile/page.js",
+            "src/components/exams/ExamRunner.js",
+            "src/components/exams/wizard/DraggableQuestionList.js",
+            "src/components/questions/SectionBasedQuestion.js",
+            "src/components/profile/PhotoUpload.js",
+            "src/components/questions/ImageUploader.js",
+            "src/components/questions/QuestionPreview.js"
+          ],
+          "solution": "Import Image from next/image and replace img tags"
+        },
+        {
+          "id": "fix-font-loading",
+          "title": "Fix Font Loading Configuration",
+          "description": "Move custom fonts to _document.js for proper Next.js font loading",
+          "count": 2,
+          "status": "pending",
+          "estimated_time": "1 hour",
+          "impact": "Font loading performance",
+          "files_affected": ["app/layout.js"],
+          "solution": "Create pages/_document.js and move font links there"
+        },
+        {
+          "id": "add-code-splitting",
+          "title": "Implement Code Splitting",
+          "description": "Add dynamic imports and lazy loading for better performance",
+          "status": "pending",
+          "estimated_time": "4-6 hours",
+          "impact": "Bundle size, initial load time",
+          "solution": "Use dynamic imports for heavy components and routes"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 4: Type Safety and Architecture (Long-term - 2-3 weeks)",
+      "priority": "LOW",
+      "description": "Improve type safety and code architecture",
+      "tasks": [
+        {
+          "id": "migrate-to-typescript",
+          "title": "Migrate JavaScript files to TypeScript",
+          "description": "Convert key files from .js to .ts/.tsx for better type safety",
+          "status": "pending",
+          "estimated_time": "1-2 weeks",
+          "impact": "Type safety, developer experience",
+          "priority_files": [
+            "src/hooks/useAuth.js",
+            "src/lib/auth/*.js",
+            "src/services/*.js",
+            "src/components/forms/*.js"
+          ],
+          "solution": "Gradual migration starting with core utilities"
+        },
+        {
+          "id": "improve-error-handling",
+          "title": "Standardize Error Handling",
+          "description": "Create consistent error handling patterns across the application",
+          "status": "pending",
+          "estimated_time": "1 week",
+          "impact": "User experience, debugging",
+          "solution": "Create error boundary components and standardized error responses"
+        },
+        {
+          "id": "add-unit-tests",
+          "title": "Add Comprehensive Unit Tests",
+          "description": "Increase test coverage for critical components and utilities",
+          "current_coverage": "Unknown",
+          "target_coverage": "80%",
+          "status": "pending",
+          "estimated_time": "1-2 weeks",
+          "impact": "Code reliability, regression prevention",
+          "solution": "Add tests for components, hooks, and utilities"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 5: Production Readiness (Final - 1 week)",
+      "priority": "MEDIUM",
+      "description": "Prepare application for production deployment",
+      "tasks": [
+        {
+          "id": "setup-production-logging",
+          "title": "Setup Production Logging",
+          "description": "Configure proper logging for production environment",
+          "status": "pending",
+          "estimated_time": "2-3 hours",
+          "impact": "Monitoring, debugging",
+          "solution": "Configure winston for different environments"
+        },
+        {
+          "id": "optimize-bundle-size",
+          "title": "Optimize Bundle Size",
+          "description": "Analyze and reduce bundle size for better performance",
+          "status": "pending",
+          "estimated_time": "4-6 hours",
+          "impact": "Load time, user experience",
+          "solution": "Use webpack-bundle-analyzer and optimize imports"
+        },
+        {
+          "id": "setup-monitoring",
+          "title": "Setup Error Monitoring",
+          "description": "Add error tracking and performance monitoring",
+          "status": "pending",
+          "estimated_time": "2-3 hours",
+          "impact": "Production monitoring",
+          "solution": "Integrate Sentry or similar service"
+        },
+        {
+          "id": "security-audit",
+          "title": "Security Audit",
+          "description": "Review and fix security vulnerabilities",
+          "status": "pending",
+          "estimated_time": "1-2 days",
+          "impact": "Security",
+          "solution": "Run security audit and fix vulnerabilities"
+        }
+      ]
+    }
+  ],
+  "immediate_actions": [
+    {
+      "action": "Fix Prettier Error",
+      "file": "src/lib/logger/index.js",
+      "line": 153,
+      "fix": "Add newline character"
+    },
+    {
+      "action": "Investigate Client Component Error",
+      "priority": "URGENT",
+      "steps": [
+        "Check global components in app/layout.js",
+        "Verify all button components have 'use client'",
+        "Check for hydration mismatches",
+        "Review error boundaries"
+      ]
+    },
+    {
+      "action": "Configure ESLint",
+      "file": "next.config.js",
+      "change": "Set ignoreDuringBuilds: true"
+    }
+  ],
+  "success_criteria": {
+    "build": "npm run build succeeds without errors",
+    "runtime": "No client component errors in console",
+    "functionality": "All buttons and forms work properly",
+    "performance": "Lighthouse score > 90",
+    "code_quality": "ESLint warnings < 20"
+  },
+  "estimated_total_time": "3-4 weeks",
+  "risk_assessment": {
+    "high_risk": [
+      "Client component error - could be complex to debug",
+      "Large codebase with many interdependencies"
+    ],
+    "medium_risk": [
+      "TypeScript migration might break existing functionality",
+      "Performance optimizations could introduce bugs"
+    ],
+    "low_risk": [
+      "Code cleanup tasks",
+      "Configuration changes"
+    ]
+  }
+}

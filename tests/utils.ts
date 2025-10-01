@@ -23,7 +23,7 @@ export async function loginAs(page: Page, role: UserRole) {
     throw new Error(`Invalid user role: ${role}`);
   }
 
-  await page.goto('/login');
+  await page.goto('/login-3d');
   await page.getByLabel('Email address').fill(user.email);
   await page.getByLabel('Password').fill(user.password);
   await page.getByRole('button', { name: 'Sign in' }).click();

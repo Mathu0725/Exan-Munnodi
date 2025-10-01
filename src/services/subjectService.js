@@ -7,12 +7,24 @@ const getSubjectsFromStorage = () => {
   return subjects
     ? JSON.parse(subjects)
     : [
-        { id: 1, name: 'General Knowledge', slug: 'general-knowledge', order: 1, active: true },
-        { id: 2, name: 'Mathematics', slug: 'mathematics', order: 2, active: true },
+        {
+          id: 1,
+          name: 'General Knowledge',
+          slug: 'general-knowledge',
+          order: 1,
+          active: true,
+        },
+        {
+          id: 2,
+          name: 'Mathematics',
+          slug: 'mathematics',
+          order: 2,
+          active: true,
+        },
       ];
 };
 
-const saveSubjectsToStorage = (subjects) => {
+const saveSubjectsToStorage = subjects => {
   localStorage.setItem('subjects', JSON.stringify(subjects));
 };
 
@@ -23,24 +35,35 @@ const getSubSubjectsFromStorage = () => {
     ? JSON.parse(subSubjects)
     : [
         { id: 101, subject_id: 1, name: 'History', slug: 'history', order: 1 },
-        { id: 102, subject_id: 1, name: 'Geography', slug: 'geography', order: 2 },
+        {
+          id: 102,
+          subject_id: 1,
+          name: 'Geography',
+          slug: 'geography',
+          order: 2,
+        },
         { id: 201, subject_id: 2, name: 'Algebra', slug: 'algebra', order: 1 },
       ];
 };
 
-const saveSubSubjectsToStorage = (subSubjects) => {
+const saveSubSubjectsToStorage = subSubjects => {
   localStorage.setItem('subsubjects', JSON.stringify(subSubjects));
 };
 
 // Simulate API delay
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export const subjectService = {
   async getSubjects({ page = 1, limit = 10, search = '' } = {}) {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (search) params.set('search', search);
 
-    const res = await fetch(`/api/subjects?${params.toString()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/subjects?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch subjects');
     return res.json();
   },
@@ -72,14 +95,16 @@ export const subjectService = {
   },
 
   async deleteSubject(id) {
-    const res = await fetch(`/api/subjects/${id}` , { method: 'DELETE' });
+    const res = await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete subject');
     return res.json();
   },
 
   async getSubSubjectsForSubject(subjectId) {
     if (!subjectId) return { data: [] };
-    const res = await fetch(`/api/subsubjects?subjectId=${subjectId}`, { cache: 'no-store' });
+    const res = await fetch(`/api/subsubjects?subjectId=${subjectId}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch sub-subjects');
     return res.json();
   },

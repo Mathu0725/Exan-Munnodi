@@ -7,8 +7,8 @@ import withRole from '@/components/auth/withRole';
 function CategoriesPage() {
   return (
     <MasterDataPage
-      pageTitle="Categories"
-      itemType="Category"
+      pageTitle='Categories'
+      itemType='Category'
       service={categoryService}
     />
   );

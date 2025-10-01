@@ -15,4 +15,3 @@ export class CategoryRepository {
     throw new Error('Method not implemented');
   }
 }
-

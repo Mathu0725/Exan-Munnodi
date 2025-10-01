@@ -9,4 +9,3 @@ export class DeleteSubSubjectUseCase {
     return { success: true };
   }
 }
-

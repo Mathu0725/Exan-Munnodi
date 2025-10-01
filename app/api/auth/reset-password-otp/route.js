@@ -7,17 +7,31 @@ export async function POST(request) {
     const { email, otp, password } = await request.json();
 
     if (!email || !otp || !password) {
-      return NextResponse.json({ success: false, message: 'Email, OTP, and new password are required.' }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Email, OTP, and new password are required.',
+        },
+        { status: 400 }
+      );
     }
 
     if (String(password).length < 8) {
-      return NextResponse.json({ success: false, message: 'Password must be at least 8 characters.' }, { status: 422 });
+      return NextResponse.json(
+        { success: false, message: 'Password must be at least 8 characters.' },
+        { status: 422 }
+      );
     }
 
-    const user = await prisma.user.findUnique({ where: { email: String(email).trim().toLowerCase() } });
+    const user = await prisma.user.findUnique({
+      where: { email: String(email).trim().toLowerCase() },
+    });
     if (!user) {
       // Do not leak whether email exists
-      return NextResponse.json({ success: true, message: 'If the email exists, the password has been updated.' });
+      return NextResponse.json({
+        success: true,
+        message: 'If the email exists, the password has been updated.',
+      });
     }
 
     const resetToken = await prisma.passwordResetToken.findFirst({
@@ -31,7 +45,10 @@ export async function POST(request) {
     });
 
     if (!resetToken) {
-      return NextResponse.json({ success: false, message: 'Invalid or expired OTP.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Invalid or expired OTP.' },
+        { status: 400 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,11 +64,15 @@ export async function POST(request) {
       }),
     ]);
 
-    return NextResponse.json({ success: true, message: 'Password updated successfully.' });
+    return NextResponse.json({
+      success: true,
+      message: 'Password updated successfully.',
+    });
   } catch (error) {
     console.error('Reset password via OTP error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to reset password.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to reset password.' },
+      { status: 500 }
+    );
   }
 }
-
-

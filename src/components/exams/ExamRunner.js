@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { examResultService } from '@/services/examResultService';
-import { loadAttempt, saveAttempt, clearAttempt } from '@/services/examAttemptService';
+import {
+  loadAttempt,
+  saveAttempt,
+  clearAttempt,
+} from '@/services/examAttemptService';
 
 export default function ExamRunner({ exam }) {
   const { user } = useAuth();
@@ -20,19 +24,21 @@ export default function ExamRunner({ exam }) {
   // Process questions to handle section-based questions and configurations
   const processedQuestions = useMemo(() => {
     const processed = [];
-    
+
     exam?.questions?.forEach(question => {
       if (question.isSectionBased && question.sectionConfig) {
         // Handle section configuration - select random questions for this student
         const { selectedCount, questionRange } = question.sectionConfig;
         const totalQuestions = questionRange.end - questionRange.start + 1;
-        
+
         // If the question has individual questions defined, use those
         if (question.questions && question.questions.length > 0) {
           // Shuffle the individual questions and select the required number
-          const shuffled = [...question.questions].sort(() => Math.random() - 0.5);
+          const shuffled = [...question.questions].sort(
+            () => Math.random() - 0.5
+          );
           const selectedQuestions = shuffled.slice(0, selectedCount);
-          
+
           // Create individual questions for this student
           selectedQuestions.forEach((individualQuestion, index) => {
             processed.push({
@@ -46,20 +52,24 @@ export default function ExamRunner({ exam }) {
               sectionConfig: question.sectionConfig,
               options: individualQuestion.options || [],
               correct_answer: individualQuestion.correct_answer,
-              image: individualQuestion.image
+              image: individualQuestion.image,
             });
           });
         } else {
           // Fallback to the old format (range-based)
           const allQuestionNumbers = Array.from(
-            { length: totalQuestions }, 
+            { length: totalQuestions },
             (_, i) => questionRange.start + i
           );
-          
+
           // Shuffle and select the required number
-          const shuffled = [...allQuestionNumbers].sort(() => Math.random() - 0.5);
-          const selectedQuestions = shuffled.slice(0, selectedCount).sort((a, b) => a - b);
-          
+          const shuffled = [...allQuestionNumbers].sort(
+            () => Math.random() - 0.5
+          );
+          const selectedQuestions = shuffled
+            .slice(0, selectedCount)
+            .sort((a, b) => a - b);
+
           // Create individual questions for this student
           selectedQuestions.forEach(questionNum => {
             processed.push({
@@ -70,11 +80,15 @@ export default function ExamRunner({ exam }) {
               questionNumber: questionNum,
               isSectionQuestion: true,
               sectionParentId: question.id,
-              sectionConfig: question.sectionConfig
+              sectionConfig: question.sectionConfig,
             });
           });
         }
-      } else if (question.question_type === 'section_based' && question.startQuestion && question.endQuestion) {
+      } else if (
+        question.question_type === 'section_based' &&
+        question.startQuestion &&
+        question.endQuestion
+      ) {
         // Legacy section-based questions (expand all)
         for (let i = question.startQuestion; i <= question.endQuestion; i++) {
           processed.push({
@@ -84,7 +98,7 @@ export default function ExamRunner({ exam }) {
             body: question.description || question.body,
             questionNumber: i,
             isSectionQuestion: true,
-            sectionParentId: question.id
+            sectionParentId: question.id,
           });
         }
       } else {
@@ -92,7 +106,7 @@ export default function ExamRunner({ exam }) {
         processed.push(question);
       }
     });
-    
+
     return processed;
   }, [exam?.questions]);
 
@@ -106,14 +120,21 @@ export default function ExamRunner({ exam }) {
       const marks = q.marks ?? 1;
       total += marks;
       const selected = answers[q.id];
-      const correctOpt = (q.options || []).find((o) => o.is_correct);
-      if (correctOpt && (correctOpt.id === selected || String(correctOpt.id) === String(selected))) {
+      const correctOpt = (q.options || []).find(o => o.is_correct);
+      if (
+        correctOpt &&
+        (correctOpt.id === selected ||
+          String(correctOpt.id) === String(selected))
+      ) {
         obtained += marks;
       }
     }
     return { obtained, total };
   }, [answers, questions]);
-  const score = useMemo(() => (submitted ? computeScore() : null), [submitted, computeScore]);
+  const score = useMemo(
+    () => (submitted ? computeScore() : null),
+    [submitted, computeScore]
+  );
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -184,7 +205,7 @@ export default function ExamRunner({ exam }) {
 
     if (mode === 'total_exam_time' && totalMinutes) {
       const initial = Math.max(1, parseInt(totalMinutes, 10)) * 60;
-      setSecondsLeft((prev) => {
+      setSecondsLeft(prev => {
         if (restoredSecondsRef.current && typeof prev === 'number') {
           restoredSecondsRef.current = false;
           return prev;
@@ -193,7 +214,7 @@ export default function ExamRunner({ exam }) {
         return typeof prev === 'number' ? prev : initial;
       });
       intervalRef.current = setInterval(() => {
-        setSecondsLeft((s) => {
+        setSecondsLeft(s => {
           if (s === null) return null;
           if (s <= 1) {
             clearTimer();
@@ -204,11 +225,12 @@ export default function ExamRunner({ exam }) {
         });
       }, 1000);
     } else if (mode === 'per_question_time') {
-      const rawLimit = current?.time_limit ?? exam?.config?.per_question_seconds ?? 60;
+      const rawLimit =
+        current?.time_limit ?? exam?.config?.per_question_seconds ?? 60;
       const parsed = parseInt(rawLimit, 10);
       const limit = Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
 
-      setSecondsLeft((prev) => {
+      setSecondsLeft(prev => {
         if (restoredSecondsRef.current && typeof prev === 'number') {
           restoredSecondsRef.current = false;
           return prev;
@@ -218,12 +240,12 @@ export default function ExamRunner({ exam }) {
       });
 
       intervalRef.current = setInterval(() => {
-        setSecondsLeft((s) => {
+        setSecondsLeft(s => {
           if (s === null) return null;
           if (s <= 1) {
             clearTimer();
             if (index < questions.length - 1) {
-              setIndex((i) => Math.min(i + 1, questions.length - 1));
+              setIndex(i => Math.min(i + 1, questions.length - 1));
             } else {
               submitRef.current?.();
             }
@@ -249,12 +271,12 @@ export default function ExamRunner({ exam }) {
     questions.length,
   ]);
 
-  const handleSelect = (optId) => {
-    setAnswers((prev) => ({ ...prev, [current.id]: optId }));
+  const handleSelect = optId => {
+    setAnswers(prev => ({ ...prev, [current.id]: optId }));
   };
 
-  const next = () => setIndex((i) => Math.min(i + 1, questions.length - 1));
-  const prev = () => setIndex((i) => Math.max(i - 1, 0));
+  const next = () => setIndex(i => Math.min(i + 1, questions.length - 1));
+  const prev = () => setIndex(i => Math.max(i - 1, 0));
   const submit = async () => {
     if (!exam || hasSubmittedRef.current) return;
     hasSubmittedRef.current = true;
@@ -267,8 +289,16 @@ export default function ExamRunner({ exam }) {
       obtained,
       total,
     };
-    try { await examResultService.submitResult(payload); } catch {}
-    try { clearAttempt(exam.id, user?.email); } catch {}
+    try {
+      await examResultService.submitResult(payload);
+    } catch (error) {
+      console.error('Failed to submit exam result:', error);
+    }
+    try {
+      clearAttempt(exam.id, user?.email);
+    } catch (error) {
+      console.error('Failed to clear exam attempt:', error);
+    }
   };
 
   submitRef.current = submit;
@@ -282,62 +312,72 @@ export default function ExamRunner({ exam }) {
   if (!exam) return null;
 
   return (
-    <div className="p-4">
-      <div className="mb-2 text-sm text-gray-600 flex justify-between">
+    <div className='p-4'>
+      <div className='mb-2 text-sm text-gray-600 flex justify-between'>
         <span>Candidate: {user?.name || user?.email}</span>
         {secondsLeft !== null && (
-          <span className="font-mono">
-            Time: {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+          <span className='font-mono'>
+            Time: {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:
+            {String(secondsLeft % 60).padStart(2, '0')}
           </span>
         )}
       </div>
       {!submitted ? (
         <div>
-          <div className="mb-2 font-medium">
+          <div className='mb-2 font-medium'>
             Question {index + 1} / {questions.length}
             {current?.isSectionQuestion && (
-              <span className="ml-2 text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded">
+              <span className='ml-2 text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded'>
                 Section Question {current.questionNumber}
               </span>
             )}
           </div>
-          <div className="p-4 bg-white rounded border">
+          <div className='p-4 bg-white rounded border'>
             {/* Section-based question header */}
             {current?.isSectionQuestion && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                <div className="text-sm text-blue-800 font-medium">
-                  📋 {current.title.replace(' - Question ' + current.questionNumber, '')}
+              <div className='mb-4 p-3 bg-blue-50 border border-blue-200 rounded'>
+                <div className='text-sm text-blue-800 font-medium'>
+                  📋{' '}
+                  {current.title.replace(
+                    ' - Question ' + current.questionNumber,
+                    ''
+                  )}
                 </div>
-                <div className="text-xs text-blue-600 mt-1">
-                  This is question {current.questionNumber} from a section-based question
+                <div className='text-xs text-blue-600 mt-1'>
+                  This is question {current.questionNumber} from a section-based
+                  question
                   {current.sectionConfig && (
-                    <span className="ml-2 text-green-600">
-                      (Random selection: {current.sectionConfig.selectedCount} of {current.sectionConfig.totalQuestions} questions)
+                    <span className='ml-2 text-green-600'>
+                      (Random selection: {current.sectionConfig.selectedCount}{' '}
+                      of {current.sectionConfig.totalQuestions} questions)
                     </span>
                   )}
                 </div>
               </div>
             )}
-            
-            <div className="mb-4">{current?.body || current?.title}</div>
-            
+
+            <div className='mb-4'>{current?.body || current?.title}</div>
+
             {/* Show image if available */}
             {current?.image && (
-              <div className="mb-4">
-                <img 
-                  src={current.image} 
-                  alt="Question image" 
-                  className="max-w-full h-auto rounded border"
+              <div className='mb-4'>
+                <img
+                  src={current.image}
+                  alt='Question image'
+                  className='max-w-full h-auto rounded border'
                 />
               </div>
             )}
-            
-            <div className="space-y-2">
-              {(current?.options || []).map((opt) => (
-                <label key={opt.id} className="flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50">
+
+            <div className='space-y-2'>
+              {(current?.options || []).map(opt => (
+                <label
+                  key={opt.id}
+                  className='flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50'
+                >
                   <input
-                    type="radio"
-                    className="mr-2"
+                    type='radio'
+                    className='mr-2'
                     name={`q-${current?.id}`}
                     checked={answers[current?.id] === opt.id}
                     onChange={() => handleSelect(opt.id)}
@@ -348,26 +388,44 @@ export default function ExamRunner({ exam }) {
               ))}
             </div>
           </div>
-          <div className="mt-4 flex justify-between">
-            <button onClick={prev} disabled={index === 0} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Previous</button>
+          <div className='mt-4 flex justify-between'>
+            <button
+              onClick={prev}
+              disabled={index === 0}
+              className='px-4 py-2 bg-gray-200 rounded disabled:opacity-50'
+            >
+              Previous
+            </button>
             {index < questions.length - 1 ? (
-              <button onClick={next} className="px-4 py-2 bg-indigo-600 text-white rounded">Next</button>
+              <button
+                onClick={next}
+                className='px-4 py-2 bg-indigo-600 text-white rounded'
+              >
+                Next
+              </button>
             ) : (
-              <button onClick={submit} className="px-4 py-2 bg-green-600 text-white rounded">Submit</button>
+              <button
+                onClick={submit}
+                className='px-4 py-2 bg-green-600 text-white rounded'
+              >
+                Submit
+              </button>
             )}
           </div>
         </div>
       ) : (
-        <div className="p-4 bg-white rounded border">
-          <div className="text-lg font-semibold mb-2">Submission received</div>
-          <div className="text-gray-600">Your responses have been submitted.</div>
+        <div className='p-4 bg-white rounded border'>
+          <div className='text-lg font-semibold mb-2'>Submission received</div>
+          <div className='text-gray-600'>
+            Your responses have been submitted.
+          </div>
           {score && (
-            <div className="mt-2 text-sm text-gray-700">Score: {score.obtained} / {score.total}</div>
+            <div className='mt-2 text-sm text-gray-700'>
+              Score: {score.obtained} / {score.total}
+            </div>
           )}
         </div>
       )}
     </div>
   );
 }
-
-

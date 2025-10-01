@@ -9,7 +9,10 @@ export async function GET(request) {
     const limit = Number(searchParams.get('limit') || '20');
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
     const where = { userId: Number(userId) };
@@ -53,7 +56,10 @@ export async function PATCH(request) {
     const { notificationIds, isRead } = body;
 
     if (!notificationIds || !Array.isArray(notificationIds)) {
-      return NextResponse.json({ error: 'Notification IDs array is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Notification IDs array is required' },
+        { status: 400 }
+      );
     }
 
     await prisma.notification.updateMany({

@@ -24,22 +24,31 @@ export default function ExamResultsPage() {
 
   if (user?.role !== 'Admin') {
     return (
-      <PageWrapper title="Results">
-        <div className="text-red-600">Access denied. Admins only.</div>
+      <PageWrapper title='Results'>
+        <div className='text-red-600'>Access denied. Admins only.</div>
       </PageWrapper>
     );
   }
 
   return (
-    <PageWrapper title="Exam Results">
+    <PageWrapper title='Exam Results'>
       {loading && <div>Loading...</div>}
       {!loading && (
-        <div className="bg-white rounded shadow overflow-auto">
-          <div className="p-3 border-b flex justify-end">
+        <div className='bg-white rounded shadow overflow-auto'>
+          <div className='p-3 border-b flex justify-end'>
             <button
               onClick={() => {
-                const csv = unparse(rows.map(r => ({ submittedAt: r.submittedAt, userEmail: r.userEmail, obtained: r.obtained, total: r.total })));
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const csv = unparse(
+                  rows.map(r => ({
+                    submittedAt: r.submittedAt,
+                    userEmail: r.userEmail,
+                    obtained: r.obtained,
+                    total: r.total,
+                  }))
+                );
+                const blob = new Blob([csv], {
+                  type: 'text/csv;charset=utf-8;',
+                });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -47,30 +56,42 @@ export default function ExamResultsPage() {
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="px-3 py-1 bg-indigo-600 text-white rounded"
+              className='px-3 py-1 bg-indigo-600 text-white rounded'
             >
               Export CSV
             </button>
           </div>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className='min-w-full divide-y divide-gray-200'>
+            <thead className='bg-gray-50'>
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Submitted At</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                <th className='px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase'>
+                  Submitted At
+                </th>
+                <th className='px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase'>
+                  Student
+                </th>
+                <th className='px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase'>
+                  Score
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {rows.map((r) => (
+            <tbody className='divide-y divide-gray-200'>
+              {rows.map(r => (
                 <tr key={r.id}>
-                  <td className="px-4 py-2 text-sm">{new Date(r.submittedAt).toLocaleString()}</td>
-                  <td className="px-4 py-2 text-sm">{r.userEmail}</td>
-                  <td className="px-4 py-2 text-sm">{r.obtained} / {r.total}</td>
+                  <td className='px-4 py-2 text-sm'>
+                    {new Date(r.submittedAt).toLocaleString()}
+                  </td>
+                  <td className='px-4 py-2 text-sm'>{r.userEmail}</td>
+                  <td className='px-4 py-2 text-sm'>
+                    {r.obtained} / {r.total}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-sm text-gray-500" colSpan={3}>No submissions yet.</td>
+                  <td className='px-4 py-4 text-sm text-gray-500' colSpan={3}>
+                    No submissions yet.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -80,5 +101,3 @@ export default function ExamResultsPage() {
     </PageWrapper>
   );
 }
-
-

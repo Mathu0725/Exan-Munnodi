@@ -6,7 +6,8 @@ export class GetQuestionListUseCase {
   }
 
   async execute(filter = {}) {
-    const { data, total, page, limit } = await this.questionRepository.list(filter);
+    const { data, total, page, limit } =
+      await this.questionRepository.list(filter);
     return {
       data: data.map(createQuestion),
       total,

@@ -1,11 +1,11 @@
-const toJson = async (response) => {
+const toJson = async response => {
   const contentType = response.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');
   if (!isJson) return null;
   return response.json().catch(() => null);
 };
 
-const handleResponse = async (response) => {
+const handleResponse = async response => {
   const payload = await toJson(response);
   if (!response.ok) {
     const error = new Error(payload?.message || 'Request failed');
@@ -19,7 +19,9 @@ const handleResponse = async (response) => {
 export const adminUserService = {
   async list(params = {}) {
     const search = new URLSearchParams(params).toString();
-    const response = await fetch(`/api/admin/users${search ? `?${search}` : ''}`);
+    const response = await fetch(
+      `/api/admin/users${search ? `?${search}` : ''}`
+    );
     return handleResponse(response);
   },
 

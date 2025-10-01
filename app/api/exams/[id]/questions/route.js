@@ -1,25 +1,30 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function PATCH(request, { params }) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTENT_EDITOR]
-    });
-
-    if (!authResult.success) {
-      return authResult.error;
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const decoded = verifyAccessToken(token);
 
-    const user = authResult.user;
+    if (!['Admin', 'Content Editor', 'Super Admin'].includes(decoded.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const { id } = params;
     const { questions } = await request.json();
 
     if (!Array.isArray(questions)) {
-      return NextResponse.json({ error: 'Questions must be an array' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Questions must be an array' },
+        { status: 400 }
+      );
     }
 
     // Validate that all question IDs exist
@@ -30,7 +35,10 @@ export async function PATCH(request, { params }) {
     });
 
     if (existingQuestions.length !== questionIds.length) {
-      return NextResponse.json({ error: 'Some questions do not exist' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Some questions do not exist' },
+        { status: 400 }
+      );
     }
 
     const updatedExam = await prisma.exam.update({

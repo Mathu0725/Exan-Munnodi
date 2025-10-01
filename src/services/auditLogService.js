@@ -6,17 +6,19 @@ const getLogsFromStorage = () => {
   return logs ? JSON.parse(logs) : [];
 };
 
-const saveLogsToStorage = (logs) => {
+const saveLogsToStorage = logs => {
   localStorage.setItem('auditLogs', JSON.stringify(logs));
 };
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export const auditLogService = {
   async getLogs() {
     await delay(300);
     const logs = getLogsFromStorage();
-    return { data: logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) };
+    return {
+      data: logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
+    };
   },
 
   logAction(action, entityType, entityId, details) {

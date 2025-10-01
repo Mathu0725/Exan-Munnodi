@@ -1,23 +1,29 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import { verifyAccessToken } from '@/lib/jwt';
+import { cookies } from 'next/headers';
 
 export async function GET(request, { params }) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTENT_EDITOR]
-    });
+    // Check authentication using JWT token
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (!authResult.success) {
-      return authResult.error;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = authResult.user;
-    
+    const decoded = verifyAccessToken(token);
+
     // Only Admin and Super Admin can view student groups
     if (!['Admin', 'Super Admin'].includes(decoded.role)) {
-      return NextResponse.json({ error: 'Unauthorized. Only Admin and Super Admin can view student groups.' }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            'Unauthorized. Only Admin and Super Admin can view student groups.',
+        },
+        { status: 403 }
+      );
     }
 
     const groupId = parseInt(params.id);
@@ -31,9 +37,9 @@ export async function GET(request, { params }) {
       where: { id: groupId },
       include: {
         members: {
-          select: { userId: true }
-        }
-      }
+          select: { userId: true },
+        },
+      },
     });
 
     if (!group) {
@@ -46,7 +52,7 @@ export async function GET(request, { params }) {
     const where = {
       role: 'Student',
       status: 'Active',
-      id: { notIn: existingMemberIds } // Exclude students already in the group
+      id: { notIn: existingMemberIds }, // Exclude students already in the group
     };
 
     if (search) {
@@ -87,9 +93,14 @@ export async function GET(request, { params }) {
         pageSize: limit,
       },
     });
-
   } catch (error) {
-    console.error('GET /api/student-groups/[id]/available-students failed', error);
-    return NextResponse.json({ error: 'Failed to fetch available students' }, { status: 500 });
+    console.error(
+      'GET /api/student-groups/[id]/available-students failed',
+      error
+    );
+    return NextResponse.json(
+      { error: 'Failed to fetch available students' },
+      { status: 500 }
+    );
   }
 }

@@ -19,4 +19,3 @@ export class CreateSubSubjectUseCase {
     return this.subjectRepository.saveSubSubject(entity);
   }
 }
-

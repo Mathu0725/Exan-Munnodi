@@ -15,4 +15,3 @@ export function createUserProfile(props) {
     updatedAt: props.updatedAt ?? props.updated_at ?? null,
   };
 }
-

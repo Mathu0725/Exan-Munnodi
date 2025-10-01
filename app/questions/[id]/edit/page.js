@@ -12,7 +12,11 @@ export default function EditQuestionPage() {
   const params = useParams();
   const questionId = params.id;
 
-  const { data: question, isLoading, error } = useQuery({
+  const {
+    data: question,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['question', questionId],
     queryFn: () => questionService.getQuestion(questionId),
     enabled: !!questionId,
@@ -28,9 +32,9 @@ export default function EditQuestionPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Edit Question">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Loading question...</div>
+      <PageWrapper title='Edit Question'>
+        <div className='flex justify-center items-center h-64'>
+          <div className='text-lg'>Loading question...</div>
         </div>
       </PageWrapper>
     );
@@ -38,12 +42,14 @@ export default function EditQuestionPage() {
 
   if (error) {
     return (
-      <PageWrapper title="Edit Question">
-        <div className="text-center py-8">
-          <div className="text-red-600 text-lg mb-4">Error loading question</div>
-          <button 
+      <PageWrapper title='Edit Question'>
+        <div className='text-center py-8'>
+          <div className='text-red-600 text-lg mb-4'>
+            Error loading question
+          </div>
+          <button
             onClick={() => router.push('/questions')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md"
+            className='px-4 py-2 bg-gray-600 text-white rounded-md'
           >
             Back to Questions
           </button>
@@ -54,12 +60,12 @@ export default function EditQuestionPage() {
 
   if (!question) {
     return (
-      <PageWrapper title="Edit Question">
-        <div className="text-center py-8">
-          <div className="text-gray-600 text-lg mb-4">Question not found</div>
-          <button 
+      <PageWrapper title='Edit Question'>
+        <div className='text-center py-8'>
+          <div className='text-gray-600 text-lg mb-4'>Question not found</div>
+          <button
             onClick={() => router.push('/questions')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md"
+            className='px-4 py-2 bg-gray-600 text-white rounded-md'
           >
             Back to Questions
           </button>

@@ -8,13 +8,15 @@ export class RequestProfileUpdateUseCase {
 
   async execute({ userId, changes, comment }) {
     if (!userId) throw new Error('userId is required');
-    if (!changes || typeof changes !== 'object') throw new Error('changes must be provided');
+    if (!changes || typeof changes !== 'object')
+      throw new Error('changes must be provided');
 
     const user = await this.userRepository.findById(userId);
     if (!user) throw new Error('User not found');
 
-    const pendingRequests = (await this.updateRequestRepository.findByUserId(userId)) || [];
-    const hasPending = pendingRequests.some((req) => req.status === 'Pending');
+    const pendingRequests =
+      (await this.updateRequestRepository.findByUserId(userId)) || [];
+    const hasPending = pendingRequests.some(req => req.status === 'Pending');
     if (hasPending) {
       throw new Error('You already have a pending update request');
     }
@@ -28,4 +30,3 @@ export class RequestProfileUpdateUseCase {
     return this.updateRequestRepository.create(requestEntity);
   }
 }
-

@@ -19,4 +19,3 @@ export class UserUpdateRequestRepository {
     throw new Error('Method not implemented');
   }
 }
-

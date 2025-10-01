@@ -5,7 +5,9 @@ export const examService = {
     if (filter.query) params.set('query', filter.query);
     if (filter.examTypeId) params.set('examTypeId', String(filter.examTypeId));
 
-    const res = await fetch(`/api/exams?${params.toString()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/exams?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch exams');
     return res.json();
   },

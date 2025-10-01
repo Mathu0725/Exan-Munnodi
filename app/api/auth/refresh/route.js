@@ -1,82 +1,74 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { JWTService } from '@/lib/jwt';
 import prisma from '@/lib/prisma';
-import { serialize } from 'cookie';
+import {
+  hashToken,
+  rotateRefreshToken,
+  buildAuthCookies,
+} from '@/lib/refreshTokens';
+import { signAccessToken } from '@/lib/jwt';
 
-const sanitizeUser = (user) => {
-  const { password, ...safe } = user;
-  return safe;
-};
-
-export async function POST() {
+export async function POST(request) {
   try {
     const cookieStore = cookies();
-    const refreshToken = cookieStore.get('refresh_token')?.value;
+    const refreshPlain = cookieStore.get('refresh_token')?.value;
 
-    if (!refreshToken) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Refresh token not found' 
-      }, { status: 401 });
+    if (!refreshPlain) {
+      return NextResponse.json(
+        { success: false, message: 'Missing refresh token' },
+        { status: 401 }
+      );
     }
 
-    // Validate refresh token and get user
-    const user = await JWTService.validateRefreshToken(refreshToken);
-
-    if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Invalid refresh token' 
-      }, { status: 401 });
-    }
-
-    // Check if user is still active
-    if (!['Active', 'Approved'].includes(user.status)) {
-      // Revoke all tokens for inactive user
-      await JWTService.revokeAllUserTokens(user.id);
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Account is not active' 
-      }, { status: 403 });
-    }
-
-    // Generate new access token
-    const { accessToken, refreshToken: newRefreshToken } = await JWTService.generateTokenPair(user);
-
-    // Set new access token cookie
-    const accessTokenCookie = serialize('auth_token', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes
-      path: '/',
+    const tokenHash = hashToken(refreshPlain);
+    const record = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
     });
+    if (!record || record.revokedAt || record.expiresAt < new Date()) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid refresh token' },
+        { status: 401 }
+      );
+    }
 
-    // Set new refresh token cookie
-    const refreshTokenCookie = serialize('refresh_token', newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
+    const user = await prisma.user.findUnique({ where: { id: record.userId } });
+    if (!user || !['Active', 'Approved'].includes(user.status)) {
+      return NextResponse.json(
+        { success: false, message: 'User not active' },
+        { status: 403 }
+      );
+    }
+
+    const accessToken = signAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
     });
+    const { newPlain, expiresAt } = await rotateRefreshToken(
+      refreshPlain,
+      user,
+      {
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        device: request.headers.get('user-agent') || undefined,
+      }
+    );
 
-    const response = NextResponse.json({ 
-      success: true, 
-      data: sanitizeUser(user),
-      message: 'Token refreshed successfully'
-    }, { status: 200 });
-    
-    response.headers.set('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
-
+    const response = NextResponse.json({ success: true }, { status: 200 });
+    const cookiesToSet = buildAuthCookies({
+      accessToken,
+      accessExpiresInSec: 60 * 15,
+      refreshToken: newPlain,
+      refreshExpiresAt: expiresAt,
+    });
+    response.headers.append('Set-Cookie', cookiesToSet[0]);
+    response.headers.append('Set-Cookie', cookiesToSet[1]);
     return response;
   } catch (error) {
-    console.error('Token refresh error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Failed to refresh token' 
-    }, { status: 401 });
+    console.error('Refresh token error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to refresh token' },
+      { status: 500 }
+    );
   }
 }
-

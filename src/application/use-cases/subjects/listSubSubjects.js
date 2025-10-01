@@ -11,4 +11,3 @@ export class ListSubSubjectsUseCase {
     return subsubjects.map(createSubSubject);
   }
 }
-

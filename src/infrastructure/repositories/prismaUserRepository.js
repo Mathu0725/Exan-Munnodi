@@ -21,7 +21,10 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async findByEmail(email) {
-    const user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { profile: true },
+    });
     return normalize(user);
   }
 
@@ -53,7 +56,9 @@ export class PrismaUserRepository extends UserRepository {
       institution: userEntity.institution || null,
       role: userEntity.role,
       status: userEntity.status,
-      approvedById: userEntity.approvedById ? Number(userEntity.approvedById) : null,
+      approvedById: userEntity.approvedById
+        ? Number(userEntity.approvedById)
+        : null,
     };
 
     if (!userEntity.id) {
@@ -76,4 +81,3 @@ export class PrismaUserRepository extends UserRepository {
     await prisma.user.delete({ where: { id: Number(id) } });
   }
 }
-

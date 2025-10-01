@@ -20,4 +20,3 @@ export function createSubSubject(props) {
     subjectId: props.subjectId ?? props.subject_id ?? null,
   };
 }
-

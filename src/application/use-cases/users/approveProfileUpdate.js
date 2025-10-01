@@ -23,7 +23,7 @@ export class ApproveProfileUpdateUseCase {
       requestId,
       approve ? 'Approved' : 'Rejected',
       reviewerId,
-      comment,
+      comment
     );
 
     const user = await this.userRepository.findById(request.userId);
@@ -79,4 +79,3 @@ export class ApproveProfileUpdateUseCase {
     };
   }
 }
-

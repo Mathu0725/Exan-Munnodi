@@ -17,11 +17,8 @@ export default function NewQuestionPage() {
   };
 
   return (
-    <PageWrapper title="Create New Question">
-      <QuestionTypeSelector
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
+    <PageWrapper title='Create New Question'>
+      <QuestionTypeSelector onSave={handleSave} onCancel={handleCancel} />
     </PageWrapper>
   );
 }

@@ -1,4 +1,4 @@
-const handleResponse = async (response) => {
+const handleResponse = async response => {
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     const message = payload?.error || payload?.message || 'Request failed';
@@ -12,7 +12,9 @@ const handleResponse = async (response) => {
 
 export const profileService = {
   async getProfile(userId) {
-    const response = await fetch(`/api/profile?id=${userId}`, { cache: 'no-store' });
+    const response = await fetch(`/api/profile?id=${userId}`, {
+      cache: 'no-store',
+    });
     return handleResponse(response);
   },
 
@@ -34,4 +36,3 @@ export const profileService = {
     return handleResponse(response);
   },
 };
-

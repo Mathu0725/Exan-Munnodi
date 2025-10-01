@@ -1,38 +1,56 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import { verifyAccessToken } from '@/lib/jwt';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN]
-    });
+    // Check authentication using JWT token
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (!authResult.success) {
-      return authResult.error;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = authResult.user;
+    const decoded = verifyAccessToken(token);
 
-    const { name, email, password, role, institution, phone } = await request.json();
+    // Only Super Admin can create other admins
+    if (decoded.role !== 'Super Admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Only Super Admin can create other admins.' },
+        { status: 403 }
+      );
+    }
+
+    const { name, email, password, role, institution, phone } =
+      await request.json();
 
     // Validation
     if (!name || !email || !password || !role) {
-      return NextResponse.json({ error: 'Name, email, password, and role are required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Name, email, password, and role are required.' },
+        { status: 400 }
+      );
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long.' },
+        { status: 400 }
+      );
     }
 
     // Validate role - Super Admin can create Admin and other staff roles
     const allowedRoles = ['Admin', 'Content Editor', 'Reviewer', 'Analyst'];
     if (!allowedRoles.includes(role)) {
-      return NextResponse.json({ 
-        error: `Invalid role. You can create: ${allowedRoles.join(', ')}.` 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Invalid role. You can create: ${allowedRoles.join(', ')}.`,
+        },
+        { status: 400 }
+      );
     }
 
     // Check if email already exists
@@ -41,7 +59,10 @@ export async function POST(request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: 'A user with this email already exists.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'A user with this email already exists.' },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -81,14 +102,19 @@ export async function POST(request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `${role} created successfully.`,
-      admin: newAdmin,
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: `${role} created successfully.`,
+        admin: newAdmin,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Create admin error:', error);
-    return NextResponse.json({ error: 'Failed to create admin.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create admin.' },
+      { status: 500 }
+    );
   }
 }

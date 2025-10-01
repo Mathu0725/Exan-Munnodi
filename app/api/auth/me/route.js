@@ -1,9 +1,9 @@
-import { JWTService } from '@/lib/jwt';
+import { verifyAccessToken } from '@/lib/jwt';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const sanitizeUser = (user) => {
+const sanitizeUser = user => {
   const { password, ...safe } = user;
   return safe;
 };
@@ -14,11 +14,13 @@ export async function GET() {
     const token = cookieStore.get('auth_token')?.value;
 
     if (!token) {
-      return NextResponse.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: 'Not authenticated' },
+        { status: 401 }
+      );
     }
 
-    // Verify access token using JWT service
-    const decoded = JWTService.verifyAccessToken(token);
+    const decoded = verifyAccessToken(token);
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
@@ -28,15 +30,27 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true, data: sanitizeUser(user) });
   } catch (error) {
-    if (error.message.includes('Invalid or expired')) {
-      return NextResponse.json({ success: false, message: 'Invalid or expired token' }, { status: 401 });
+    if (
+      error.name === 'JsonWebTokenError' ||
+      error.name === 'TokenExpiredError'
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401 }
+      );
     }
     console.error('Me endpoint error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to authenticate' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to authenticate' },
+      { status: 500 }
+    );
   }
 }

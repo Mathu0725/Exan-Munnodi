@@ -7,10 +7,14 @@ const now = () => Date.now();
 
 const read = () => {
   if (typeof window === 'undefined') return {};
-  try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(KEY) || '{}');
+  } catch {
+    return {};
+  }
 };
 
-const write = (obj) => localStorage.setItem(KEY, JSON.stringify(obj));
+const write = obj => localStorage.setItem(KEY, JSON.stringify(obj));
 
 export function startPresence(userId) {
   if (typeof window === 'undefined') return () => {};
@@ -20,7 +24,7 @@ export function startPresence(userId) {
     data[id] = now();
     // cleanup expired entries
     for (const k of Object.keys(data)) {
-      if ((now() - data[k]) > TTL_MS * 2) delete data[k];
+      if (now() - data[k] > TTL_MS * 2) delete data[k];
     }
     write(data);
   };
@@ -32,7 +36,5 @@ export function startPresence(userId) {
 export function getOnlineCount() {
   const data = read();
   const cutoff = now() - TTL_MS;
-  return Object.values(data).filter((ts) => ts >= cutoff).length;
+  return Object.values(data).filter(ts => ts >= cutoff).length;
 }
-
-

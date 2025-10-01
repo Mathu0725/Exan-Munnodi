@@ -1,6 +1,6 @@
 // Mock service for Exam Results (localStorage)
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const getResults = () => {
   if (typeof window === 'undefined') return [];
@@ -8,7 +8,7 @@ const getResults = () => {
   return raw ? JSON.parse(raw) : [];
 };
 
-const saveResults = (items) => {
+const saveResults = items => {
   localStorage.setItem('examResults', JSON.stringify(items));
 };
 
@@ -33,8 +33,6 @@ export const examResultService = {
   async listByExam(examId) {
     await delay(200);
     const items = getResults();
-    return items.filter((r) => r.examId === parseInt(examId));
+    return items.filter(r => r.examId === parseInt(examId));
   },
 };
-
-

@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { verifyAuth } from '@/lib/auth-middleware';
+import { verifyAccessToken } from '@/lib/jwt';
+import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
-    // Verify authentication
-    const authResult = await verifyAuth(request);
+    // Check authentication using JWT token
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (!authResult.success) {
-      return authResult.error;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = authResult.user;
+    const decoded = verifyAccessToken(token);
 
     const formData = await request.formData();
     const file = formData.get('photo');
@@ -24,12 +26,18 @@ export async function POST(request) {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'File must be an image' },
+        { status: 400 }
+      );
     }
 
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'File size must be less than 5MB' },
+        { status: 400 }
+      );
     }
 
     // Generate unique filename
@@ -56,12 +64,11 @@ export async function POST(request) {
       data: { avatarUrl },
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       avatarUrl,
-      message: 'Photo uploaded successfully' 
+      message: 'Photo uploaded successfully',
     });
-
   } catch (error) {
     console.error('Photo upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

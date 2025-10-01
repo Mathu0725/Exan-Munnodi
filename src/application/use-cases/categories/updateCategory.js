@@ -19,4 +19,3 @@ export class UpdateCategoryUseCase {
     return this.categoryRepository.save(categoryEntity);
   }
 }
-

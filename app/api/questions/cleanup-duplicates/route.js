@@ -6,11 +6,11 @@ const questionRepository = new PrismaQuestionRepository();
 export async function POST() {
   try {
     console.log('Starting duplicate cleanup...');
-    
+
     // Get all questions grouped by title, subject, and category
-    const allQuestions = await questionRepository.list({ 
-      page: 1, 
-      limit: 10000 // Get all questions
+    const allQuestions = await questionRepository.list({
+      page: 1,
+      limit: 10000, // Get all questions
     });
 
     const duplicates = [];
@@ -33,11 +33,11 @@ export async function POST() {
         questions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const toKeep = questions[0];
         const toRemove = questions.slice(1);
-        
+
         duplicates.push({
           key,
           keep: toKeep,
-          remove: toRemove
+          remove: toRemove,
         });
       }
     }
@@ -50,11 +50,13 @@ export async function POST() {
       duplicateGroups++;
       console.log(`Processing duplicate group: ${duplicate.key}`);
       console.log(`Keeping question ID: ${duplicate.keep.id}`);
-      
+
       for (const question of duplicate.remove) {
         await questionRepository.delete(question.id);
         removedCount++;
-        console.log(`Removed duplicate question ID: ${question.id} - "${question.title}"`);
+        console.log(
+          `Removed duplicate question ID: ${question.id} - "${question.title}"`
+        );
       }
     }
 
@@ -64,14 +66,16 @@ export async function POST() {
       stats: {
         duplicateGroups,
         removedCount,
-        totalProcessed: allQuestions.data.length
-      }
+        totalProcessed: allQuestions.data.length,
+      },
     });
-
   } catch (error) {
     console.error('Duplicate cleanup failed:', error);
-    return NextResponse.json({ 
-      error: error.message 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message,
+      },
+      { status: 500 }
+    );
   }
 }

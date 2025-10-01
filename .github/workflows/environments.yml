@@ -1,0 +1,66 @@
+name: Environment Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # Setup Environments
+  setup-environments:
+    name: Setup Environments
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create environment files
+        run: |
+          # Create staging environment file
+          cat > .env.staging << EOF
+          NODE_ENV=staging
+          DATABASE_URL=postgresql://user:password@staging-db:5432/exam_munnodi_staging
+          JWT_SECRET=your-staging-jwt-secret
+          JWT_ISSUER=exam-munnodi-staging
+          JWT_AUDIENCE=exam-munnodi-staging-users
+          REDIS_URL=redis://staging-redis:6379
+          NEXT_PUBLIC_API_URL=https://api-staging.exam-munnodi.com
+          EOF
+
+          # Create production environment file
+          cat > .env.production << EOF
+          NODE_ENV=production
+          DATABASE_URL=postgresql://user:password@prod-db:5432/exam_munnodi_production
+          JWT_SECRET=your-production-jwt-secret
+          JWT_ISSUER=exam-munnodi
+          JWT_AUDIENCE=exam-munnodi-users
+          REDIS_URL=redis://prod-redis:6379
+          NEXT_PUBLIC_API_URL=https://api.exam-munnodi.com
+          EOF
+
+      - name: Display environment setup instructions
+        run: |
+          echo "## Environment Setup Instructions"
+          echo ""
+          echo "### Required GitHub Secrets:"
+          echo "1. DATABASE_URL - Database connection string"
+          echo "2. JWT_SECRET - JWT signing secret"
+          echo "3. JWT_ISSUER - JWT issuer"
+          echo "4. JWT_AUDIENCE - JWT audience"
+          echo "5. REDIS_URL - Redis connection string"
+          echo "6. SNYK_TOKEN - Snyk security scanning token (optional)"
+          echo "7. GITHUB_TOKEN - GitHub token for releases"
+          echo ""
+          echo "### Environment Variables:"
+          echo "1. NODE_ENV - Environment (development/staging/production)"
+          echo "2. NEXT_PUBLIC_API_URL - Public API URL"
+          echo "3. DATABASE_URL - Database connection string"
+          echo "4. JWT_SECRET - JWT signing secret"
+          echo "5. JWT_ISSUER - JWT issuer"
+          echo "6. JWT_AUDIENCE - JWT audience"
+          echo "7. REDIS_URL - Redis connection string"
+          echo ""
+          echo "### Setup Steps:"
+          echo "1. Go to your repository settings"
+          echo "2. Navigate to 'Secrets and variables' > 'Actions'"
+          echo "3. Add the required secrets"
+          echo "4. Configure environment protection rules"
+          echo "5. Set up branch protection rules"

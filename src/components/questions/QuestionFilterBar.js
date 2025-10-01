@@ -19,7 +19,7 @@ export default function QuestionFilterBar({ filters, onFilterChange }) {
     enabled: !!filters.subject_id,
   });
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = e => {
     const { name, value } = e.target;
     if (name === 'subject_id') {
       // Reset sub-subject when subject changes to prevent stale filters
@@ -29,58 +29,68 @@ export default function QuestionFilterBar({ filters, onFilterChange }) {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className='p-4 bg-white rounded-lg shadow mb-4 grid grid-cols-1 md:grid-cols-5 gap-4'>
       <input
-        type="text"
-        name="search"
-        placeholder="Search questions..."
+        type='text'
+        name='search'
+        placeholder='Search questions...'
         value={filters.search || ''}
         onChange={handleFilterChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        className='w-full px-3 py-2 border border-gray-300 rounded-md'
       />
       <select
-        name="subject_id"
+        name='subject_id'
         value={filters.subject_id || ''}
         onChange={handleFilterChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        className='w-full px-3 py-2 border border-gray-300 rounded-md'
       >
-        <option value="">All Subjects</option>
-        {subjectsData?.data.map((s) => (
-          <option key={s.id} value={s.id}>{s.name}</option>
+        <option value=''>All Subjects</option>
+        {subjectsData?.data.map(s => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
         ))}
       </select>
       <select
-        name="sub_subject_id"
+        name='sub_subject_id'
         value={filters.sub_subject_id || ''}
         onChange={handleFilterChange}
         disabled={!filters.subject_id}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        className='w-full px-3 py-2 border border-gray-300 rounded-md'
       >
-        <option value="">{filters.subject_id ? 'All Sub-subjects' : 'Select Subject First'}</option>
-        {subSubjectsData?.data.map((ss) => (
-          <option key={ss.id} value={ss.id}>{ss.name}</option>
+        <option value=''>
+          {filters.subject_id ? 'All Sub-subjects' : 'Select Subject First'}
+        </option>
+        {subSubjectsData?.data.map(ss => (
+          <option key={ss.id} value={ss.id}>
+            {ss.name}
+          </option>
         ))}
       </select>
       <select
-        name="category_id"
+        name='category_id'
         value={filters.category_id || ''}
         onChange={handleFilterChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        className='w-full px-3 py-2 border border-gray-300 rounded-md'
       >
-        <option value="">All Categories</option>
-        {categoriesData?.data.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
+        <option value=''>All Categories</option>
+        {categoriesData?.data.map(c => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
         ))}
       </select>
       <select
-        name="difficulty"
+        name='difficulty'
         value={filters.difficulty || ''}
         onChange={handleFilterChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        className='w-full px-3 py-2 border border-gray-300 rounded-md'
       >
-        <option value="">All Difficulties</option>
-        {[1, 2, 3, 4, 5].map((d) => (
-          <option key={d} value={d}>Difficulty {d}</option>
+        <option value=''>All Difficulties</option>
+        {[1, 2, 3, 4, 5].map(d => (
+          <option key={d} value={d}>
+            Difficulty {d}
+          </option>
         ))}
       </select>
     </div>

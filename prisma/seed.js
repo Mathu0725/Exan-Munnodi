@@ -44,7 +44,9 @@ async function main() {
   ];
 
   for (const student of seedStudents) {
-    const existing = await prisma.user.findUnique({ where: { email: student.email } });
+    const existing = await prisma.user.findUnique({
+      where: { email: student.email },
+    });
     if (!existing) {
       const password = await bcrypt.hash('Student@123', 10);
       await prisma.user.create({
@@ -63,7 +65,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error('Seed error:', error);
     process.exit(1);
   })

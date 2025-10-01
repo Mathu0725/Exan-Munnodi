@@ -4,7 +4,9 @@ import { createUserProfile } from '@/domain/entities/userProfile';
 
 export class PrismaUserProfileRepository extends UserProfileRepository {
   async findByUserId(userId) {
-    const profile = await prisma.userProfile.findUnique({ where: { userId: Number(userId) } });
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: Number(userId) },
+    });
     return profile ? createUserProfile(profile) : null;
   }
 
@@ -36,4 +38,3 @@ export class PrismaUserProfileRepository extends UserProfileRepository {
     return createUserProfile(updated);
   }
 }
-

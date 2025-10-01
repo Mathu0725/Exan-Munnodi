@@ -1,5 +1,12 @@
 # Exam Munnodi Admin Portal
 
+## Test Coverage
+
+![Lines](./coverage/badges/line.svg)
+![Statements](./coverage/badges/statement.svg)
+![Functions](./coverage/badges/function.svg)
+![Branches](./coverage/badges/branch.svg)
+
 ## Prerequisites
 
 - Node.js 18+
@@ -86,6 +93,7 @@
 
 See `docs/DEPLOY.md` for environment variables, build steps, and post-deploy checks.
 # UnicomTIC Quiz - Admin
+# UnicomTIC Quiz - Admin
 
 Next.js 14 (App Router) admin console for managing subjects, questions, and exams. Includes a student runner and admin-only results. Now partially wired to a Prisma (SQLite) API.
 
@@ -140,6 +148,46 @@ Any email starting with `admin`, `editor`, or `student` maps to that role.
 - `npm start` — run production build
 - `npm run prisma:generate` — generate Prisma client
 - `npm run prisma:migrate` — run dev migration
+- `npm test` — run Jest tests
+- `npm run test:watch` — run Jest tests in watch mode
+- `npm run test:coverage` — run tests with coverage report
+- `npm run test:coverage:report` — generate detailed HTML coverage report
+- `npm run test:badges` — generate coverage badges for README
+- `npm run test:integration` — run integration tests
+- `npm run test:e2e` — run Playwright E2E tests
+
+## Testing & Quality
+
+This project uses a comprehensive testing and quality assurance setup:
+
+- **Jest** - Unit testing framework
+- **Testing Library** - React component testing
+- **Playwright** - End-to-end testing
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **Husky** - Git hooks for pre-commit checks
+- **GitHub Actions** - CI/CD pipeline
+
+Run the test suite:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Generate detailed HTML coverage report
+npm run test:coverage:report
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run E2E tests
+npm run test:e2e
+```
+
+View the coverage report by opening `coverage/lcov-report/index.html` in your browser or using the provided `coverage-report.html` file.
 
 ## Email notifications
 
@@ -154,3 +202,59 @@ FROM_EMAIL="UnicomTIC Quiz <no-reply@yourhost.com>"
 ```
 
 The Exams page “Notify” action will call `/api/notify` to send emails. If SMTP is not configured, it falls back to a local mock log.
+
+## PostgreSQL Migration & Setup
+
+1) Install PostgreSQL (or Docker Desktop) locally or on your server.
+
+2) Start Postgres with pooling via Docker:
+
+```bash
+npm run db:up
+```
+
+This launches `postgres` on 5432 and `pgbouncer` on 6432.
+
+3) Create `.env.postgres` based on the provided template, then copy to `.env`:
+
+```bash
+copy .env.postgres .env   # Windows
+# cp .env.postgres .env   # macOS/Linux
+```
+
+4) Switch Prisma to Postgres (non-destructive push for dev):
+
+```bash
+npm run prisma:pg:generate
+npm run prisma:pg:push
+```
+
+5) Seed development data:
+
+```bash
+npm run seed
+```
+
+6) Run the app:
+
+```bash
+npm run dev
+```
+
+7) Future schema changes (creates migrations):
+
+```bash
+npm run prisma:pg:migrate
+```
+
+8) Inspect the database:
+
+```bash
+npm run prisma:pg:studio
+```
+
+Notes:
+- Use the PgBouncer URL for production and high concurrency: `postgresql://user:pass@host:6432/db?schema=public`.
+- Unique constraints and indexes are already defined (e.g., `User.email`). Prisma translates them to Postgres.
+- For production, prefer a managed Postgres (with pooling) or run `pgbouncer` as provided.
+- Set `JWT_SECRET` in your `.env` (required). Tokens default to 15-minute access tokens.

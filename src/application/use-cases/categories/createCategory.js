@@ -18,4 +18,3 @@ export class CreateCategoryUseCase {
     return this.categoryRepository.save(categoryEntity);
   }
 }
-

@@ -8,7 +8,10 @@ const userRepository = new PrismaUserRepository();
 const profileRepository = new PrismaUserProfileRepository();
 const updateRequestRepository = new PrismaUserUpdateRequestRepository();
 
-const requestProfileUpdate = new RequestProfileUpdateUseCase(userRepository, updateRequestRepository);
+const requestProfileUpdate = new RequestProfileUpdateUseCase(
+  userRepository,
+  updateRequestRepository
+);
 
 export async function GET(request) {
   try {
@@ -17,10 +20,15 @@ export async function GET(request) {
     const email = searchParams.get('email');
 
     if (!id && !email) {
-      return NextResponse.json({ error: 'id or email is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'id or email is required' },
+        { status: 400 }
+      );
     }
 
-    const user = id ? await userRepository.findById(id) : await userRepository.findByEmail(email);
+    const user = id
+      ? await userRepository.findById(id)
+      : await userRepository.findByEmail(email);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -57,4 +65,3 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status });
   }
 }
-

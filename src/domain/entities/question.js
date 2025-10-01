@@ -1,19 +1,24 @@
 export function createQuestion(props) {
-  const normalizeTags = (value) => {
+  const normalizeTags = value => {
     if (!value) return [];
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
         if (Array.isArray(parsed)) return parsed;
-      } catch {}
-      return value.split(',').map((t) => t.trim()).filter(Boolean);
+      } catch (error) {
+        // If JSON parsing fails, fall back to string splitting
+      }
+      return value
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
     }
     return [];
   };
 
   const normalizeOptions = (options = []) =>
-    (Array.isArray(options) ? options : []).map((opt) => ({
+    (Array.isArray(options) ? options : []).map(opt => ({
       id: opt.id ?? opt.option_id ?? null,
       text: opt.text ?? opt.label ?? '',
       isCorrect: opt.isCorrect ?? opt.is_correct ?? false,

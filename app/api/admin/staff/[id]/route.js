@@ -1,26 +1,31 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function DELETE(request, { params }) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTENT_EDITOR]
-    });
-
-    if (!authResult.success) {
-      return authResult.error;
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const decoded = verifyAccessToken(token);
 
-    const user = authResult.user;
+    if (!['Admin', 'Content Editor', 'Super Admin'].includes(decoded.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const { id } = params;
     const staffId = parseInt(id);
 
     // Prevent deleting self
     if (staffId === decoded.id) {
-      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Cannot delete your own account' },
+        { status: 400 }
+      );
     }
 
     // Check if staff member exists
@@ -30,7 +35,10 @@ export async function DELETE(request, { params }) {
     });
 
     if (!staff) {
-      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Staff member not found' },
+        { status: 404 }
+      );
     }
 
     // Delete the staff member

@@ -1,7 +1,7 @@
 // Mock services for Categories and Exam Types (localStorage-backed)
 import { auditLogService } from './auditLogService';
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // Generic helpers
 const getFromStorage = (key, fallback) => {
@@ -30,14 +30,22 @@ const initialExamTypes = [
 // Categories
 export const categoryService = {
   async getAll() {
-    const res = await fetch('/api/categories?limit=1000', { cache: 'no-store' });
+    const res = await fetch('/api/categories?limit=1000', {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch categories');
     return res.json();
   },
 
   async list({ page = 1, limit = 10, search = '' } = {}) {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit), search });
-    const res = await fetch(`/api/categories?${params.toString()}`, { cache: 'no-store' });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      search,
+    });
+    const res = await fetch(`/api/categories?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch categories');
     return res.json();
   },
@@ -78,9 +86,15 @@ export const examTypeService = {
   },
 
   async list({ page = 1, limit = 10, search = '', active } = {}) {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit), search });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      search,
+    });
     if (active !== undefined) params.set('active', String(active));
-    const res = await fetch(`/api/exam-types?${params.toString()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/exam-types?${params.toString()}`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error('Failed to fetch exam types');
     return res.json();
   },

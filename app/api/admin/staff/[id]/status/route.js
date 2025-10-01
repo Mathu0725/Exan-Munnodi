@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function PATCH(request, { params }) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.CONTENT_EDITOR]
-    });
-
-    if (!authResult.success) {
-      return authResult.error;
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const decoded = verifyAccessToken(token);
 
-    const user = authResult.user;
+    if (!['Admin', 'Content Editor', 'Super Admin'].includes(decoded.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const { id } = params;
     const { status } = await request.json();
@@ -38,7 +40,7 @@ export async function PATCH(request, { params }) {
     await prisma.notification.create({
       data: {
         title: 'Account Status Updated',
-        message: `Your account status has been changed to ${status} by ${session.user.name}.`,
+        message: `Your account status has been changed to ${status} by ${decoded.name}.`,
         type: status === 'Active' ? 'success' : 'warning',
         userId: parseInt(id),
       },

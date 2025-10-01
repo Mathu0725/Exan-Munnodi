@@ -10,4 +10,3 @@ export class ListExamTypesUseCase {
     return examTypes.map(createExamType);
   }
 }
-

@@ -23,7 +23,7 @@ export class PrismaQuestionRepository extends QuestionRepository {
   async findDuplicates(title, subjectId, categoryId) {
     const duplicates = await prisma.question.findMany({
       where: {
-        title: title, // SQLite doesn't support mode: 'insensitive'
+        title: { equals: title, mode: 'insensitive' },
         subjectId: Number(subjectId),
         categoryId: Number(categoryId),
       },
@@ -47,8 +47,8 @@ export class PrismaQuestionRepository extends QuestionRepository {
     const where = {};
     if (query) {
       where.OR = [
-        { title: { contains: query } }, // SQLite doesn't support mode: 'insensitive'
-        { body: { contains: query } },
+        { title: { contains: query, mode: 'insensitive' } },
+        { body: { contains: query, mode: 'insensitive' } },
       ];
     }
     if (subjectId) where.subjectId = Number(subjectId);
@@ -79,25 +79,25 @@ export class PrismaQuestionRepository extends QuestionRepository {
   }
 
   async save(questionEntity) {
-    // Validate required fields
-    if (!questionEntity.subjectId) {
-      throw new Error('Subject ID is required');
-    }
-    if (!questionEntity.categoryId) {
-      throw new Error('Category ID is required');
-    }
-
     const data = {
       title: questionEntity.title,
       body: questionEntity.body,
-      subjectId: Number(questionEntity.subjectId),
-      subSubjectId: questionEntity.subSubjectId ? Number(questionEntity.subSubjectId) : null,
-      categoryId: Number(questionEntity.categoryId),
+      subjectId: questionEntity.subjectId
+        ? Number(questionEntity.subjectId)
+        : null,
+      subSubjectId: questionEntity.subSubjectId
+        ? Number(questionEntity.subSubjectId)
+        : null,
+      categoryId: questionEntity.categoryId
+        ? Number(questionEntity.categoryId)
+        : null,
       difficulty: questionEntity.difficulty ?? 1,
       marks: questionEntity.marks ?? 1,
       negativeMarks: questionEntity.negativeMarks ?? 0,
       status: questionEntity.status ?? 'draft',
-      tags: questionEntity.tags?.length ? JSON.stringify(questionEntity.tags) : null,
+      tags: questionEntity.tags?.length
+        ? JSON.stringify(questionEntity.tags)
+        : null,
       options: questionEntity.options,
     };
 
@@ -106,7 +106,7 @@ export class PrismaQuestionRepository extends QuestionRepository {
         data: {
           ...data,
           options: {
-            create: (questionEntity.options || []).map((opt) => ({
+            create: (questionEntity.options || []).map(opt => ({
               text: opt.text ?? '',
               isCorrect: !!(opt.isCorrect ?? opt.is_correct),
             })),
@@ -117,14 +117,16 @@ export class PrismaQuestionRepository extends QuestionRepository {
       return normalize(created);
     }
 
-    await prisma.option.deleteMany({ where: { questionId: Number(questionEntity.id) } });
+    await prisma.option.deleteMany({
+      where: { questionId: Number(questionEntity.id) },
+    });
 
     const updated = await prisma.question.update({
       where: { id: Number(questionEntity.id) },
       data: {
         ...data,
         options: {
-          create: (questionEntity.options || []).map((opt) => ({
+          create: (questionEntity.options || []).map(opt => ({
             text: opt.text ?? '',
             isCorrect: !!(opt.isCorrect ?? opt.is_correct),
           })),
@@ -138,12 +140,12 @@ export class PrismaQuestionRepository extends QuestionRepository {
   async delete(id) {
     // First delete all related options
     await prisma.option.deleteMany({
-      where: { questionId: Number(id) }
+      where: { questionId: Number(id) },
     });
-    
+
     // Then delete the question
-    await prisma.question.delete({ 
-      where: { id: Number(id) } 
+    await prisma.question.delete({
+      where: { id: Number(id) },
     });
   }
 }

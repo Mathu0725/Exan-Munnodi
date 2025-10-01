@@ -12,7 +12,7 @@ const updateRequestRepository = new PrismaUserUpdateRequestRepository();
 const approveProfileUpdate = new ApproveProfileUpdateUseCase(
   userRepository,
   updateRequestRepository,
-  profileRepository,
+  profileRepository
 );
 
 export async function PATCH(request, { params }) {
@@ -27,7 +27,8 @@ export async function PATCH(request, { params }) {
 
     const { request, user } = result;
 
-    const reviewerName = request.reviewedBy?.name || user.approvedBy?.name || 'Administrator';
+    const reviewerName =
+      request.reviewedBy?.name || user.approvedBy?.name || 'Administrator';
 
     try {
       await emailService.sendProfileUpdateResultEmail(
@@ -35,7 +36,7 @@ export async function PATCH(request, { params }) {
         user.name,
         request.status,
         reviewerName,
-        request.comment,
+        request.comment
       );
     } catch (emailError) {
       console.error('Profile update result email failed:', emailError.message);
@@ -48,4 +49,3 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: error.message }, { status });
   }
 }
-

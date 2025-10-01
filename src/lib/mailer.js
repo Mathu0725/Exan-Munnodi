@@ -9,7 +9,11 @@ const missingConfig = () => {
 };
 
 const buildTransporter = () => {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
     return null;
   }
 
@@ -31,7 +35,11 @@ export async function sendMail({ to, subject, text, html }) {
     return missingConfig();
   }
 
-  const fromAddress = process.env.FROM_EMAIL || (process.env.SMTP_USER ? `UnicomTIC Quiz <${process.env.SMTP_USER}>` : undefined);
+  const fromAddress =
+    process.env.FROM_EMAIL ||
+    (process.env.SMTP_USER
+      ? `UnicomTIC Quiz <${process.env.SMTP_USER}>`
+      : undefined);
   const info = await transporter.sendMail({
     from: fromAddress,
     to: Array.isArray(to) ? to.join(',') : to,
@@ -45,5 +53,3 @@ export async function sendMail({ to, subject, text, html }) {
     id: info.messageId,
   };
 }
-
-

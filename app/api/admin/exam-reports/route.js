@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth, ROLES } from '@/lib/auth-middleware';
+import { cookies } from 'next/headers';
+import { verifyAccessToken } from '@/lib/jwt';
 
 export async function GET(request) {
   try {
-    // Verify authentication and authorization
-    const authResult = await verifyAuth(request, {
-      requiredRoles: [ROLES.ADMIN, ROLES.CONTENT_EDITOR]
-    });
+    // Check authentication using JWT token
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (!authResult.success) {
-      return authResult.error;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = authResult.user;
+    const decoded = verifyAccessToken(token);
+
+    if (!['Admin', 'Content Editor'].includes(decoded.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const examId = searchParams.get('examId');
@@ -25,11 +29,11 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     const where = {};
-    
+
     if (examId) {
       where.examId = parseInt(examId);
     }
-    
+
     if (startDate || endDate) {
       where.submittedAt = {};
       if (startDate) {
@@ -39,7 +43,7 @@ export async function GET(request) {
         where.submittedAt.lte = new Date(endDate);
       }
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -70,7 +74,7 @@ export async function GET(request) {
 
     // Apply score filters after fetching (since we need to calculate percentage)
     let filteredResults = results;
-    
+
     if (minScore || maxScore) {
       filteredResults = results.filter(result => {
         const percentage = (result.score / result.totalMarks) * 100;

@@ -1,92 +1,231 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { JWTService } from '@/lib/jwt';
+import { signAccessToken } from '@/lib/jwt';
+import {
+  issueRefreshTokenForUser,
+  buildAuthCookies,
+} from '@/lib/refreshTokens';
 import { serialize } from 'cookie';
+import { checkLoginLockout, recordLoginAttempt } from '@/lib/loginLockout';
+import { authSchemas } from '@/lib/validations/schemas';
+import {
+  validateBody,
+  createValidationErrorResponse,
+  sanitizeInput,
+} from '@/lib/validations/middleware';
+import {
+  withErrorHandler,
+  AuthenticationError,
+  RateLimitError,
+  createSuccessResponse,
+} from '@/lib/errors/errorHandler';
+import {
+  getCsrfTokenForUser,
+  addCsrfTokenToResponse,
+} from '@/lib/security/csrf';
+import { logAuthEvent, logSecurityEvent } from '@/lib/logger/requestLogger';
 
-const sanitizeUser = (user) => {
+const sanitizeUser = user => {
   const { password, ...safe } = user;
   return safe;
 };
 
-export async function POST(request) {
-  try {
-    const { email, password } = await request.json();
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticate user with email and password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Success'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         user:
+ *                           $ref: '#/components/schemas/User'
+ *                         csrfToken:
+ *                           type: string
+ *                           description: CSRF token for subsequent requests
+ *                         csrfExpiresAt:
+ *                           type: string
+ *                           format: date-time
+ *                           description: CSRF token expiration time
+ *         headers:
+ *           Set-Cookie:
+ *             description: Authentication cookies
+ *             schema:
+ *               type: string
+ *               example: auth_token=...; HttpOnly; SameSite=Strict
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+export const POST = withErrorHandler(async request => {
+  const body = await request.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ success: false, message: 'Email and password are required.' }, { status: 400 });
-    }
+  // Validate request body
+  const validation = validateBody(authSchemas.login, body);
+  if (!validation.success) {
+    return createValidationErrorResponse(validation.error);
+  }
 
-    const user = await prisma.user.findUnique({
-      where: { email: String(email).trim().toLowerCase() },
-      include: {
-        profile: true,
-        approvedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+  const { email, password } = sanitizeInput(validation.data);
+
+  const ipAddress =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    '127.0.0.1';
+  const userAgent = request.headers.get('user-agent');
+
+  // Check for lockout before processing
+  const lockoutCheck = await checkLoginLockout(email, ipAddress);
+  if (lockoutCheck.locked) {
+    logSecurityEvent('login_lockout', { email, ipAddress, userAgent });
+    throw new RateLimitError(lockoutCheck.message);
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: String(email).trim().toLowerCase() },
+    include: {
+      profile: true,
+      approvedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
         },
       },
+    },
+  });
+
+  if (!user) {
+    await recordLoginAttempt(email, ipAddress, userAgent, false);
+    logSecurityEvent('login_failed_user_not_found', {
+      email,
+      ipAddress,
+      userAgent,
     });
+    throw new AuthenticationError('Invalid email or password.');
+  }
 
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
-    }
-
-    // Allow Active and Approved. Block others with clearer messages.
-    const status = user.status;
-    if (!['Active', 'Approved'].includes(status)) {
-      const statusMessage =
-        status === 'Inactive'
-          ? 'Your account is inactive. Please contact the administrator.'
-          : status === 'Pending'
+  // Allow Active and Approved. Block others with clearer messages.
+  const status = user.status;
+  if (!['Active', 'Approved'].includes(status)) {
+    await recordLoginAttempt(email, ipAddress, userAgent, false);
+    const statusMessage =
+      status === 'Inactive'
+        ? 'Your account is inactive. Please contact the administrator.'
+        : status === 'Pending'
           ? 'Your account is pending approval by an administrator.'
           : status === 'Suspended'
-          ? 'Your account is suspended. Please contact the administrator.'
-          : `Account not active. Current status: ${status}.`;
-      return NextResponse.json({ success: false, message: statusMessage }, { status: 403 });
-    }
-
-    const passwordMatches = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatches) {
-      return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
-    }
-
-    // Generate token pair
-    const { accessToken, refreshToken } = await JWTService.generateTokenPair(user);
-
-    // Set access token cookie (short-lived)
-    const accessTokenCookie = serialize('auth_token', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes
-      path: '/',
-    });
-
-    // Set refresh token cookie (long-lived)
-    const refreshTokenCookie = serialize('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
-
-    const response = NextResponse.json({ 
-      success: true, 
-      data: sanitizeUser(user),
-      message: 'Login successful'
-    }, { status: 200 });
-    
-    response.headers.set('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
-
-    return response;
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ success: false, message: 'Failed to login.' }, { status: 500 });
+            ? 'Your account is suspended. Please contact the administrator.'
+            : `Account not active. Current status: ${status}.`;
+    throw new AuthenticationError(statusMessage);
   }
-}
+
+  const passwordMatches = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatches) {
+    await recordLoginAttempt(email, ipAddress, userAgent, false);
+    logSecurityEvent('login_failed_invalid_password', {
+      email,
+      ipAddress,
+      userAgent,
+      userId: user.id,
+    });
+    throw new AuthenticationError('Invalid email or password.');
+  }
+
+  // Create access token (15 minutes)
+  const token = signAccessToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+  });
+
+  // Record successful login attempt
+  await recordLoginAttempt(email, ipAddress, userAgent, true);
+  logAuthEvent('login_success', {
+    email,
+    ipAddress,
+    userAgent,
+    userId: user.id,
+    role: user.role,
+  });
+
+  // Create refresh token (30 days) and set cookies
+  const { plain: refreshPlain, expiresAt: refreshExpiresAt } =
+    await issueRefreshTokenForUser(user, {
+      ipAddress,
+      device: userAgent,
+    });
+
+  // Get CSRF token for the user
+  const csrfData = getCsrfTokenForUser(user.id);
+
+  // Set cookie
+  const response = createSuccessResponse(
+    {
+      user: sanitizeUser(user),
+      csrfToken: csrfData.token,
+      csrfExpiresAt: csrfData.expiresAt,
+    },
+    'Login successful'
+  );
+
+  const cookiesToSet = buildAuthCookies({
+    accessToken: token,
+    accessExpiresInSec: 60 * 15,
+    refreshToken: refreshPlain,
+    refreshExpiresAt,
+  });
+  response.headers.append('Set-Cookie', cookiesToSet[0]);
+  response.headers.append('Set-Cookie', cookiesToSet[1]);
+
+  // Add CSRF token cookie
+  addCsrfTokenToResponse(
+    response,
+    csrfData.token,
+    csrfData.expiresAt,
+    process.env.NODE_ENV === 'production'
+  );
+
+  return response;
+});

@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "C:\\Users\\unico\\Desktop\\UnicomTIC QUIZ\\Exan-Munnodi\\logs\\.b26ab47edee47c4d45b58ca73e3d98d03a5fd7a2-audit.json",
+    "files": [
+        {
+            "date": 1759134195140,
+            "name": "C:\\Users\\unico\\Desktop\\UnicomTIC QUIZ\\Exan-Munnodi\\logs\\http-2025-09-29.log",
+            "hash": "815d9537967b88ce09fc724bfa7ec305d7ddc3028c16f3767297ce243f6f2abf"
+        }
+    ],
+    "hashType": "sha256"
+}

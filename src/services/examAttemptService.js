@@ -1,6 +1,7 @@
 // Local attempt persistence to survive refresh/power loss (demo)
 
-const keyFor = (examId, userEmail) => `attempt:${examId}:${userEmail || 'anon'}`;
+const keyFor = (examId, userEmail) =>
+  `attempt:${examId}:${userEmail || 'anon'}`;
 
 export function loadAttempt(examId, userEmail) {
   if (typeof window === 'undefined') return null;
@@ -15,13 +16,20 @@ export function loadAttempt(examId, userEmail) {
 export function saveAttempt(examId, userEmail, data) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(keyFor(examId, userEmail), JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
-  } catch {}
+    localStorage.setItem(
+      keyFor(examId, userEmail),
+      JSON.stringify({ ...data, savedAt: new Date().toISOString() })
+    );
+  } catch (error) {
+    console.error('Failed to save exam attempt:', error);
+  }
 }
 
 export function clearAttempt(examId, userEmail) {
   if (typeof window === 'undefined') return;
-  try { localStorage.removeItem(keyFor(examId, userEmail)); } catch {}
+  try {
+    localStorage.removeItem(keyFor(examId, userEmail));
+  } catch (error) {
+    console.error('Failed to save exam attempt:', error);
+  }
 }
-
-
