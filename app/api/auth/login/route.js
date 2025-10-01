@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { JWTService } from '@/lib/jwt';
 import { serialize } from 'cookie';
 
 const sanitizeUser = (user) => {
@@ -55,29 +55,34 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
     }
 
-    // Create JWT
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-      },
-      process.env.JWT_SECRET || 'e933e3c8e4e4a7b4a2e5d1f8a7c6b3e2a1d0c9f8b7e6a5d4c3b2a1f0e9d8c7b6',
-      { expiresIn: '7d' }
-    );
+    // Generate token pair
+    const { accessToken, refreshToken } = await JWTService.generateTokenPair(user);
 
-    // Set cookie
-    const cookie = serialize('auth_token', token, {
+    // Set access token cookie (short-lived)
+    const accessTokenCookie = serialize('auth_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 15 * 60, // 15 minutes
       path: '/',
     });
 
-    const response = NextResponse.json({ success: true, data: sanitizeUser(user) }, { status: 200 });
-    response.headers.set('Set-Cookie', cookie);
+    // Set refresh token cookie (long-lived)
+    const refreshTokenCookie = serialize('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    const response = NextResponse.json({ 
+      success: true, 
+      data: sanitizeUser(user),
+      message: 'Login successful'
+    }, { status: 200 });
+    
+    response.headers.set('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
 
     return response;
   } catch (error) {

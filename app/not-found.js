@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { FaHome, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 

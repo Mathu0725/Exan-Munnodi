@@ -1,0 +1,11 @@
+title,body,subject_id,category_id,difficulty,marks,negative_marks,option1,option2,option3,option4,option5,correct_answer
+"What is HTML?","HTML stands for HyperText Markup Language",1,1,1,1,0,"HyperText Markup Language","High Tech Modern Language","Home Tool Markup Language","Hyperlinks and Text Markup Language","",1
+"What is CSS used for?","CSS is used for styling web pages",1,1,2,1,0,"Styling web pages","Creating databases","Server-side programming","Network configuration","",1
+"What is JavaScript?","JavaScript is a programming language for web development",1,1,2,2,0.5,"A styling language","A programming language","A database","An operating system","",2
+"What is 2 + 2?","Basic arithmetic addition",2,3,1,1,0,"3","4","5","6","",2
+"What is the square root of 16?","Find the square root",2,3,2,1,0,"2","4","8","16","",2
+"What is Newton's first law?","Law of inertia",3,4,3,2,0.5,"Law of inertia","Law of acceleration","Law of action-reaction","Law of gravity","",1
+"What is the speed of light?","Speed of light in vacuum",3,4,3,2,0.5,"300000 km/s","150000 km/s","450000 km/s","600000 km/s","",1
+"What is H2O?","Chemical formula for water",4,4,1,1,0,"Water","Oxygen","Hydrogen","Carbon dioxide","",1
+"What is photosynthesis?","Process in plants",5,4,2,2,0,"Energy production in plants","Breathing in animals","Cell division","Protein synthesis","",1
+"Who wrote Hamlet?","Famous playwright",6,5,2,1,0,"William Shakespeare","Charles Dickens","Jane Austen","Mark Twain","",1

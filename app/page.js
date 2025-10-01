@@ -210,14 +210,14 @@ export default function DashboardPage() {
         </div>
       </section>
 
-        {/* Quick Creation Modals */}
-        {showQuickStaffCreation && (
+        {/* Quick Creation Modals - Only render client-side */}
+        {typeof window !== 'undefined' && showQuickStaffCreation && (
           <QuickStaffCreation onClose={() => setShowQuickStaffCreation(false)} />
         )}
-        {showQuickStudentCreation && (
+        {typeof window !== 'undefined' && showQuickStudentCreation && (
           <QuickStudentCreation onClose={() => setShowQuickStudentCreation(false)} />
         )}
-        {showQuickAdminCreation && (
+        {typeof window !== 'undefined' && showQuickAdminCreation && (
           <QuickAdminCreation onClose={() => setShowQuickAdminCreation(false)} />
         )}
     </PageWrapper>

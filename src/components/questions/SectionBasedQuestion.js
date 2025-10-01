@@ -27,6 +27,7 @@ export default function SectionBasedQuestion({ onSave, onCancel, initialData = n
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(true);
 
   const queryClient = useQueryClient();
 
@@ -607,75 +608,86 @@ export default function SectionBasedQuestion({ onSave, onCancel, initialData = n
 
         {/* Preview */}
         <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">📋 Preview</h3>
-          <div className="space-y-4">
-            <div className="font-medium text-gray-900 dark:text-gray-100 text-lg">
-              {formData.title || 'Question Title'}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Questions {formData.startQuestion} to {formData.endQuestion} ({questionRange} questions)
-            </div>
-            
-            {formData.image && (
-              <div className="mt-3">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🖼️ Image:</div>
-                <img 
-                  src={formData.image} 
-                  alt="Question image" 
-                  className="max-w-sm h-auto rounded border"
-                />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">📋 Preview</h3>
+            <button
+              type="button"
+              onClick={() => setIsPreviewCollapsed(!isPreviewCollapsed)}
+              className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors"
+            >
+              {isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}
+            </button>
+          </div>
+          {!isPreviewCollapsed && (
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="font-medium text-gray-900 dark:text-gray-100 text-lg">
+                {formData.title || 'Question Title'}
               </div>
-            )}
-            
-            {formData.description && (
-              <div className="mt-3">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📄 Paragraph:</div>
-                <div className="text-sm text-gray-700 dark:text-gray-300 p-3 bg-white dark:bg-gray-800 rounded border">
-                  <div dangerouslySetInnerHTML={{ __html: formData.description }} />
-                </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Questions {formData.startQuestion} to {formData.endQuestion} ({questionRange} questions)
               </div>
-            )}
-            {formData.questions.length > 0 && (
-              <div className="mt-4">
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">
-                  ❓ Quiz Questions ({formData.questions.length}):
+              
+              {formData.image && (
+                <div className="mt-3">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🖼️ Image:</div>
+                  <img 
+                    src={formData.image} 
+                    alt="Question image" 
+                    className="max-w-sm h-auto rounded border"
+                  />
                 </div>
-                <div className="space-y-4">
-                  {formData.questions.map((q, idx) => (
-                    <div key={q.id} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <span className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-sm font-bold text-green-600 dark:text-green-400">
-                          {idx + 1}
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {q.title || 'Untitled Question'}
-                        </span>
-                      </div>
-                      {q.description && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 ml-10 mb-3">
-                          {q.description.replace(/<[^>]*>/g, '').substring(0, 150)}...
+              )}
+              
+              {formData.description && (
+                <div className="mt-3">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📄 Paragraph:</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 p-3 bg-white dark:bg-gray-800 rounded border">
+                    <div dangerouslySetInnerHTML={{ __html: formData.description }} />
+                  </div>
+                </div>
+              )}
+              {formData.questions.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-3">
+                    ❓ Quiz Questions ({formData.questions.length}):
+                  </div>
+                  <div className="space-y-4">
+                    {formData.questions.map((q, idx) => (
+                      <div key={q.id} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <span className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-sm font-bold text-green-600 dark:text-green-400">
+                            {idx + 1}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {q.title || 'Untitled Question'}
+                          </span>
                         </div>
-                      )}
-                      <div className="ml-10">
-                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
-                          Options: A, B, C, D • Correct: {q.correct_answer || 'Not set'}
-                        </div>
-                        {q.options && q.options.length > 0 && (
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            {q.options.map(opt => (
-                              <div key={opt.id} className={`p-2 rounded ${opt.is_correct ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
-                                <span className="font-medium">{opt.id}:</span> {opt.text || 'Empty'}
-                              </div>
-                            ))}
+                        {q.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 ml-10 mb-3">
+                            {q.description.replace(/<[^>]*>/g, '').substring(0, 150)}...
                           </div>
                         )}
+                        <div className="ml-10">
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                            Options: A, B, C, D • Correct: {q.correct_answer || 'Not set'}
+                          </div>
+                          {q.options && q.options.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {q.options.map(opt => (
+                                <div key={opt.id} className={`p-2 rounded ${opt.is_correct ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                                  <span className="font-medium">{opt.id}:</span> {opt.text || 'Empty'}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions */}

@@ -22,7 +22,7 @@ export class PrismaExamRepository {
   async search(filter = {}) {
     const where = {};
     if (filter.status) where.status = filter.status;
-    if (filter.query) where.title = { contains: filter.query, mode: 'insensitive' };
+    if (filter.query) where.title = { contains: filter.query }; // SQLite doesn't support mode: 'insensitive'
     if (filter.examTypeId) where.examTypeId = Number(filter.examTypeId);
 
     const rows = await prisma.exam.findMany({ where, orderBy: { createdAt: 'desc' } });

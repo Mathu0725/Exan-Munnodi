@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { FaExclamationTriangle, FaRefresh, FaHome } from 'react-icons/fa';
+import { FaExclamationTriangle, FaRedo, FaHome } from 'react-icons/fa';
 import Link from 'next/link';
 
 export default function GlobalError({ error, reset }) {
@@ -31,7 +31,7 @@ export default function GlobalError({ error, reset }) {
             onClick={reset}
             className="group px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg shadow-lg hover:from-red-700 hover:to-red-800 transform transition-all duration-300 hover:scale-105 flex items-center"
           >
-            <FaRefresh className="mr-2" />
+            <FaRedo className="mr-2" />
             Try Again
           </button>
           

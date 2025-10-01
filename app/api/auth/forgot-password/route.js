@@ -34,7 +34,11 @@ export async function POST(request) {
       await emailService.sendPasswordResetEmail(user.email, token, otp);
     } catch (emailError) {
       console.error('Password reset email failed:', emailError.message);
-      console.log(`Password reset token for ${email}: ${token}`);
+      // In development, log the token for testing purposes only
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] Password reset token for ${email}: ${token}`);
+        console.log(`[DEV] OTP for ${email}: ${otp}`);
+      }
     }
 
     return NextResponse.json({ success: true, message: 'If an account exists, reset code and link were sent.' });

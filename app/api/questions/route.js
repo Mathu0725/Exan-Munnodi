@@ -71,7 +71,12 @@ export async function POST(request) {
     }, { status: 201 });
   } catch (error) {
     console.error('POST /api/questions failed', error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error('Request body:', body);
+    return NextResponse.json({ 
+      error: error.message,
+      details: error.stack,
+      body: body 
+    }, { status: 400 });
   }
 }
 

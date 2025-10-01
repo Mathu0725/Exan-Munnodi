@@ -28,6 +28,7 @@ model User {
   reviewedRequests UserUpdateRequest[] @relation("UserUpdateReview")
 
   passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
   profile             UserProfile?
   
   // Student Group Relations
@@ -111,6 +112,19 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([token])
 }
 
 model Question {

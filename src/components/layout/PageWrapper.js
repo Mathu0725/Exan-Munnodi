@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';

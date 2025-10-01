@@ -23,7 +23,7 @@ export class PrismaQuestionRepository extends QuestionRepository {
   async findDuplicates(title, subjectId, categoryId) {
     const duplicates = await prisma.question.findMany({
       where: {
-        title: { equals: title, mode: 'insensitive' },
+        title: title, // SQLite doesn't support mode: 'insensitive'
         subjectId: Number(subjectId),
         categoryId: Number(categoryId),
       },
@@ -47,8 +47,8 @@ export class PrismaQuestionRepository extends QuestionRepository {
     const where = {};
     if (query) {
       where.OR = [
-        { title: { contains: query, mode: 'insensitive' } },
-        { body: { contains: query, mode: 'insensitive' } },
+        { title: { contains: query } }, // SQLite doesn't support mode: 'insensitive'
+        { body: { contains: query } },
       ];
     }
     if (subjectId) where.subjectId = Number(subjectId);
@@ -79,12 +79,20 @@ export class PrismaQuestionRepository extends QuestionRepository {
   }
 
   async save(questionEntity) {
+    // Validate required fields
+    if (!questionEntity.subjectId) {
+      throw new Error('Subject ID is required');
+    }
+    if (!questionEntity.categoryId) {
+      throw new Error('Category ID is required');
+    }
+
     const data = {
       title: questionEntity.title,
       body: questionEntity.body,
-      subjectId: questionEntity.subjectId ? Number(questionEntity.subjectId) : null,
+      subjectId: Number(questionEntity.subjectId),
       subSubjectId: questionEntity.subSubjectId ? Number(questionEntity.subSubjectId) : null,
-      categoryId: questionEntity.categoryId ? Number(questionEntity.categoryId) : null,
+      categoryId: Number(questionEntity.categoryId),
       difficulty: questionEntity.difficulty ?? 1,
       marks: questionEntity.marks ?? 1,
       negativeMarks: questionEntity.negativeMarks ?? 0,
